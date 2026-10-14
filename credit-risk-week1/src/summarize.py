@@ -6,12 +6,13 @@ Run it with ``python run.py summary`` or ``python -m src.summarize``.
 from __future__ import annotations
 
 import argparse
+import json
 from typing import Any
 
 import pandas as pd
 
-from src.data import load_table  # noqa: F401  (you will use these in your solution)
-from src.utils import DEFAULT_CONFIG, load_config, memory_mb, reduce_memory  # noqa: F401
+from src.data import load_table
+from src.utils import DEFAULT_CONFIG, load_config, memory_mb, reduce_memory
 
 # PROVIDED
 SUMMARY_FILENAME = "table_summary.json"
@@ -40,7 +41,16 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
         - A table can have zero rows. Do not divide by zero.
         - Return plain Python numbers so the result can be written as JSON.
     """
-    raise NotImplementedError("TODO(student): summarize one table")
+    n_cells = df.size
+    n_missing = int(df.isna().sum().sum())
+    return {
+        "table": name,
+        "rows": int(df.shape[0]),
+        "cols": int(df.shape[1]),
+        "mb_before": memory_mb(df),
+        "mb_after": memory_mb(reduce_memory(df)),
+        "missing_pct": 100.0 * n_missing / n_cells if n_cells else 0.0,
+    }
 
 
 # TODO(student)
@@ -60,7 +70,12 @@ def summarize_all(config: dict[str, Any]) -> list[dict[str, Any]]:
         - The reports folder may not exist yet.
         - Load and summarize one table at a time so memory stays low.
     """
-    raise NotImplementedError("TODO(student): summarize all tables and write the report")
+    rows = [summarize_table(load_table(name, config), name) for name in config["tables"]]
+
+    reports_dir = config["paths"]["reports_dir"]
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    (reports_dir / SUMMARY_FILENAME).write_text(json.dumps(rows, indent=2))
+    return rows
 
 
 # PROVIDED

@@ -1,0 +1,21 @@
+# PROVIDED: keep data, secrets, and generated clutter out of git.
+
+# Data: never commit the Kaggle download or the sample built from it
+data/
+*.zip
+
+# Secrets
+.env
+kaggle.json
+access_token
+
+# Tools
+mlruns/
+reports/*.tmp
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.DS_Store

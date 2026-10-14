@@ -5,7 +5,11 @@
     "cols": 122,
     "mb_before": 8.20096206665039,
     "mb_after": 1.5575695037841797,
+<<<<<<< HEAD
     "missing_pct": 25.07918032786885
+=======
+    "missing_pct": 25.079180327868855
+>>>>>>> c63a3c2 (Week 1 final)
   },
   {
     "table": "bureau",
@@ -13,7 +17,11 @@
     "cols": 17,
     "mb_before": 6.524118423461914,
     "mb_after": 1.175337791442871,
+<<<<<<< HEAD
     "missing_pct": 13.79570747217806
+=======
+    "missing_pct": 13.795707472178059
+>>>>>>> c63a3c2 (Week 1 final)
   },
   {
     "table": "bureau_balance",
@@ -37,7 +45,11 @@
     "cols": 8,
     "mb_before": 14.676644325256348,
     "mb_after": 2.903158187866211,
+<<<<<<< HEAD
     "missing_pct": 0.06586555836646187
+=======
+    "missing_pct": 0.06586555836646188
+>>>>>>> c63a3c2 (Week 1 final)
   },
   {
     "table": "installments_payments",

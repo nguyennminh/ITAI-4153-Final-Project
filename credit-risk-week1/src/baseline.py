@@ -11,13 +11,17 @@ import json
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from src.data import load_split  # noqa: F401  (you will use these in run_baseline)
-from src.metrics import evaluate  # noqa: F401
-from src.utils import DEFAULT_CONFIG, load_config, set_seed  # noqa: F401
+from src.data import load_split
+from src.metrics import evaluate
+from src.utils import DEFAULT_CONFIG, load_config, set_seed
 
 # PROVIDED
 DAYS_EMPLOYED_SENTINEL = 365243
@@ -49,7 +53,12 @@ def clean_application(df: pd.DataFrame) -> pd.DataFrame:
         - Use the module constant, not a typed-in number.
         - It must work on frames without TARGET too.
     """
-    raise NotImplementedError("TODO(student): replace the DAYS_EMPLOYED sentinel and add the flag")
+    cleaned = df.copy()
+    is_sentinel = cleaned["DAYS_EMPLOYED"] == DAYS_EMPLOYED_SENTINEL
+    cleaned["DAYS_EMPLOYED_ANOM"] = is_sentinel.astype(int)
+    # mask() turns the column into floats so it can hold NaN
+    cleaned["DAYS_EMPLOYED"] = cleaned["DAYS_EMPLOYED"].mask(is_sentinel)
+    return cleaned
 
 
 # TODO(student)
@@ -72,7 +81,12 @@ def get_feature_columns(df: pd.DataFrame, config: dict[str, Any]) -> tuple[list[
         - With pandas 3, text columns have dtype ``str``, not ``object``. Test for "numeric",
           and treat everything else as categorical.
     """
-    raise NotImplementedError("TODO(student): split the columns into numeric and categorical")
+    excluded = {config["id_col"], config["target_col"]}
+    features = [col for col in df.columns if col not in excluded]
+    # Booleans count as numeric for is_numeric_dtype
+    numeric_cols = [col for col in features if pd.api.types.is_numeric_dtype(df[col])]
+    categorical_cols = [col for col in features if col not in numeric_cols]
+    return numeric_cols, categorical_cols
 
 
 # TODO(student)
@@ -95,7 +109,18 @@ def build_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> 
         - Validation data can contain a category that never appears in training.
         - Return the transformer unfitted; fitting happens later, on training data only.
     """
-    raise NotImplementedError("TODO(student): build the ColumnTransformer")
+    numeric_steps = Pipeline([
+        ("impute", SimpleImputer(strategy="median")),
+        ("scale", StandardScaler()),
+    ])
+    categorical_steps = Pipeline([
+        ("impute", SimpleImputer(strategy="most_frequent")),
+        ("onehot", OneHotEncoder(handle_unknown="ignore")),
+    ])
+    return ColumnTransformer([
+        ("numeric", numeric_steps, numeric_cols),
+        ("categorical", categorical_steps, categorical_cols),
+    ])
 
 
 # TODO(student)
@@ -115,7 +140,13 @@ def build_model(config: dict[str, Any], preprocessor: ColumnTransformer) -> Pipe
         - Take every setting from the config, so a config change needs no code change.
         - Give each step a short, readable name.
     """
-    raise NotImplementedError("TODO(student): build the Pipeline")
+    settings = config["baseline"]
+    classifier = LogisticRegression(
+        max_iter=settings["max_iter"],
+        class_weight=settings["class_weight"],
+        random_state=config["seed"],
+    )
+    return Pipeline([("preprocess", preprocessor), ("classifier", classifier)])
 
 
 # TODO(student)
@@ -137,7 +168,18 @@ def write_metrics(metrics: dict[str, float], extra: dict[str, Any], path: str | 
         - Indent the JSON so a person can read it.
         - NumPy numbers are not JSON-serializable; make sure the values are plain Python types.
     """
-    raise NotImplementedError("TODO(student): write metrics.json")
+    combined = {**metrics, **extra}
+    missing = [key for key in METRICS_KEYS if key not in combined]
+    if missing:
+        raise ValueError(f"Cannot write metrics: missing keys {missing}")
+
+    # NumPy scalars (np.float64, np.int64) are not JSON-serializable; .item() unwraps them
+    record = {key: combined[key] for key in METRICS_KEYS}
+    record = {key: v.item() if isinstance(v, np.generic) else v for key, v in record.items()}
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(record, indent=2))
 
 
 # TODO(student)
@@ -169,7 +211,33 @@ def run_baseline(config: dict[str, Any]) -> dict[str, Any]:
         - The model must see the same columns, in the same order, at fit and at predict time.
         - Never pass TARGET in as a feature.
     """
-    raise NotImplementedError("TODO(student): wire the baseline together")
+    set_seed(config["seed"])
+    target = config["target_col"]
+
+    train, valid = load_split(config)
+    train, valid = clean_application(train), clean_application(valid)
+
+    # Columns come from the training frame and are reused, in the same order, for validation
+    numeric_cols, categorical_cols = get_feature_columns(train, config)
+    features = numeric_cols + categorical_cols
+
+    model = build_model(config, build_preprocessor(numeric_cols, categorical_cols))
+    model.fit(train[features], train[target])
+
+    # predict_proba has one column per class; take the one for TARGET = 1
+    positive = list(model.classes_).index(1)
+    scores = model.predict_proba(valid[features])[:, positive]
+
+    extra = {
+        "model": MODEL_NAME,
+        "n_train": len(train),
+        "n_valid": len(valid),
+        "valid_default_rate": float(valid[target].mean()),
+        "seed": config["seed"],
+    }
+    path = config["paths"]["metrics_file"]
+    write_metrics(evaluate(valid[target], scores), extra, path)
+    return json.loads(Path(path).read_text())
 
 # PROVIDED
 def main() -> None:

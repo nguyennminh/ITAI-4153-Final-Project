@@ -56,4 +56,25 @@ def load_split(config: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame]:
         - Check the split file before you trust it, and fail loudly if it looks wrong.
         - Use ``config["id_col"]`` instead of typing the column name.
     """
-    raise NotImplementedError("TODO(student): load the fixed split and return (train_df, valid_df)")
+    id_col = config["id_col"]
+    app = load_application(config)
+    # Read the ids with the application table's dtype so the lookups below match exactly
+    split = pd.read_csv(config["paths"]["split_file"], dtype={id_col: app[id_col].dtype})
+
+    if split[id_col].duplicated().any():
+        dupes = split.loc[split[id_col].duplicated(), id_col].tolist()
+        raise ValueError(f"Split file lists ids more than once: {dupes[:5]}")
+    bad_values = set(split["split"]) - {"train", "valid"}
+    if bad_values:
+        raise ValueError(f"Split file has values other than train/valid: {sorted(bad_values)}")
+    split_ids, app_ids = set(split[id_col]), set(app[id_col])
+    if split_ids != app_ids or len(app_ids) != len(app):
+        raise ValueError(
+            f"Split file does not match the sample one-to-one: "
+            f"{len(app_ids - split_ids)} sample ids missing from the split, "
+            f"{len(split_ids - app_ids)} split ids not in the sample"
+        )
+
+    train_ids = split.loc[split["split"] == "train", id_col]
+    in_train = app[id_col].isin(train_ids)
+    return app[in_train].reset_index(drop=True), app[~in_train].reset_index(drop=True)

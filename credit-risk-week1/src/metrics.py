@@ -7,7 +7,7 @@ ranking metrics that look at the scores themselves.
 from __future__ import annotations
 
 import numpy as np
-from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
 
 ArrayLike = np.ndarray | list
 
@@ -47,7 +47,10 @@ def ks_statistic(y_true: ArrayLike, y_score: ArrayLike) -> float:
           at every threshold.
         - Return a plain Python float.
     """
-    raise NotImplementedError("TODO(student): compute the KS statistic")
+    # At each threshold, tpr is the share of defaulters scoring above it and fpr the share of
+    # non-defaulters; their gap equals the gap between the two cumulative score curves.
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    return float(np.max(np.abs(tpr - fpr)))
 
 
 # TODO(student)
@@ -65,4 +68,8 @@ def evaluate(y_true: ArrayLike, y_score: ArrayLike) -> dict[str, float]:
         - The three metric functions in this module already exist (one of them is yours).
         - These exact key names are read by other code and by the check script.
     """
-    raise NotImplementedError("TODO(student): return the three metrics in a dict")
+    return {
+        "roc_auc": roc_auc(y_true, y_score),
+        "pr_auc": pr_auc(y_true, y_score),
+        "ks": ks_statistic(y_true, y_score),
+    }

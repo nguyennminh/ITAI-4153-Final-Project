@@ -1,1 +1,13 @@
 .DS_Store
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.ruff_cache/
+**/.ipynb_checkpoints/
+**/data/
+**/mlruns/
+**/reports/*.tmp
+**/.env
+**/kaggle.json
+**/access_token

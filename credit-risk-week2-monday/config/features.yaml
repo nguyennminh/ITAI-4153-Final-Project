@@ -1,0 +1,19 @@
+# PROVIDED: Week 2 settings, read together with config.yaml. Paths are relative to the
+# repository root.
+
+paths:
+  comparison_file: reports/auc_comparison.json   # written by python run.py compare
+  leakage_table: docs/leakage_table.md           # you copy it from docs/leakage_table_template.md
+
+n_bootstrap: 1000   # resamples for the 95% intervals in the comparison
+
+# Feature sets for python run.py compare. Each one lists the child tables joined onto the
+# application table. "application" (no child tables) is your Week 1 baseline: keep it first.
+feature_sets:
+  application: []
+  application+bureau: [bureau]
+  application+previous: [previous_application]
+  application+bureau+previous: [bureau, previous_application]
+  # Carry-over: uncomment each line once its aggregation passes its tests.
+  # application+bureau+previous+bureau_balance: [bureau, previous_application, bureau_balance]
+  # application+bureau+previous+bureau_balance+pos: [bureau, previous_application, bureau_balance, POS_CASH_balance]

@@ -1,0 +1,10 @@
+{
+  "model": "logistic_regression",
+  "roc_auc": 0.7097220542994935,
+  "pr_auc": 0.16930477760163976,
+  "ks": 0.35599618479560446,
+  "n_train": 4000,
+  "n_valid": 1000,
+  "valid_default_rate": 0.081,
+  "seed": 42
+}

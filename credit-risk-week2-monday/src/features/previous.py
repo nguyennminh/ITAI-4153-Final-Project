@@ -41,7 +41,6 @@ POS_CASH_FEATURES = [
 ]
 
 
-# TODO(student)
 def aggregate_previous(previous: pd.DataFrame, id_col: str = "SK_ID_CURR") -> pd.DataFrame:
     """Summarize each applicant's earlier applications at Home Credit into one row.
 
@@ -74,7 +73,25 @@ def aggregate_previous(previous: pd.DataFrame, id_col: str = "SK_ID_CURR") -> pd
           same applicant, so the tie-break matters if you want the same answer every run.
         - Do not change the input DataFrame.
     """
-    raise NotImplementedError("TODO(student): aggregate previous_application per applicant")
+    required = [id_col if col == "SK_ID_CURR" else col for col in PREVIOUS_COLUMNS]
+    require_columns(previous, required, "previous_application")
+    cleaned = replace_sentinel(previous[required], PREVIOUS_DAY_COLUMNS)
+    out = cleaned.groupby(id_col).agg(
+        PREV_COUNT=("SK_ID_PREV", "size"),
+        PREV_AMT_APPLICATION_MEAN=("AMT_APPLICATION", "mean"),
+        PREV_AMT_CREDIT_MEAN=("AMT_CREDIT", "mean"),
+        PREV_DAYS_DECISION_MAX=("DAYS_DECISION", "max"),
+        PREV_DAYS_TERMINATION_MEAN=("DAYS_TERMINATION", "mean"),
+    )
+    keys = cleaned[id_col]
+    status = cleaned["NAME_CONTRACT_STATUS"]
+    out["PREV_APPROVED_RATE"] = share_where(status.eq("Approved"), keys)
+    out["PREV_REFUSED_RATE"] = share_where(status.eq("Refused"), keys)
+    latest = cleaned.sort_values(
+        ["DAYS_DECISION", "SK_ID_PREV"], na_position="first"
+    ).drop_duplicates(id_col, keep="last")
+    out["PREV_LAST_STATUS"] = latest.set_index(id_col)["NAME_CONTRACT_STATUS"]
+    return out.reset_index()[[id_col, *PREVIOUS_FEATURES]]
 
 
 # TODO(student)  (carry-over: finish before the next class)

@@ -14,7 +14,6 @@ import pandas as pd
 COUNT_SUFFIX = "_COUNT"
 
 
-# TODO(student)
 def assert_one_row_per_applicant(
     df: pd.DataFrame, expected_ids: pd.Series, id_col: str = "SK_ID_CURR"
 ) -> None:
@@ -34,10 +33,26 @@ def assert_one_row_per_applicant(
         - Equal row counts are not enough on their own: one duplicated id plus one missing id
           keeps the count the same.
     """
-    raise NotImplementedError("TODO(student): check one row per applicant")
+    if id_col not in df.columns:
+        raise ValueError(f"Missing applicant id column: {id_col}")
+
+    if len(df) != len(expected_ids):
+        raise ValueError(f"{len(df):,} rows for {len(expected_ids):,} applicants")
+
+    ids = df[id_col]
+    duplicate_count = int(ids.duplicated().sum())
+    if duplicate_count:
+        raise ValueError(f"{duplicate_count:,} duplicate applicant ids in {len(df):,} rows")
+
+    missing_count = int((~expected_ids.isin(ids)).sum())
+    unexpected_count = int((~ids.isin(expected_ids)).sum())
+    if missing_count or unexpected_count:
+        raise ValueError(
+            f"Applicant ids differ: {missing_count:,} missing and "
+            f"{unexpected_count:,} unexpected ids"
+        )
 
 
-# TODO(student)
 def join_features(
     app: pd.DataFrame, feature_tables: dict[str, pd.DataFrame], id_col: str = "SK_ID_CURR"
 ) -> pd.DataFrame:
@@ -64,4 +79,27 @@ def join_features(
         - ``pd.merge`` has a ``validate=`` argument that can raise on duplicate keys for you.
         - Why 0 for counts but NaN for averages? Be ready to explain it at the checkpoint.
     """
-    raise NotImplementedError("TODO(student): left-join the feature tables")
+    taken_columns = set(app.columns)
+    count_columns = []
+    for name, table in feature_tables.items():
+        duplicate_count = int(table[id_col].duplicated().sum())
+        if duplicate_count:
+            raise ValueError(
+                f"Feature table {name!r} has {duplicate_count:,} duplicate applicant ids; "
+                "it was probably not aggregated"
+            )
+        feature_columns = table.columns.drop(id_col)
+        collisions = taken_columns.intersection(feature_columns)
+        if collisions or feature_columns.has_duplicates:
+            raise ValueError(f"Feature column name already taken in table {name!r}")
+        taken_columns.update(feature_columns)
+        count_columns.extend(c for c in feature_columns if c.endswith(COUNT_SUFFIX))
+
+    result = app.copy()
+    for table in feature_tables.values():
+        result = result.merge(table, on=id_col, how="left", sort=False, validate="one_to_one")
+    if count_columns:
+        result[count_columns] = result[count_columns].fillna(0)
+    assert_one_row_per_applicant(result, app[id_col], id_col)
+    result.index = app.index
+    return result

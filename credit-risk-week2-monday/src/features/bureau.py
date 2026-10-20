@@ -114,4 +114,53 @@ def aggregate_bureau_balance(
           share: a credit with 2 months must not weigh as much as one with 60.
         - Credits in bureau without any monthly history must not be counted.
     """
+
+    # Step 1: Check that both tables contain the required columns.
+    require_columns(bureau_balance, BUREAU_BALANCE_COLUMNS, "bureau_balance")
+    require_columns(bureau, ["SK_ID_BUREAU", id_col], "bureau")
+
+    # Step 2: Convert STATUS to numbers.
+    # Statuses "C" and "X" become NaN and are ignored in numeric calculations.
+    status_numeric = pd.to_numeric(
+        bureau_balance["STATUS"], errors="coerce"
+    )
+
+    # Step 3: Aggregate monthly records for each bureau credit.
+    credit_history = bureau_balance.assign(
+        NUMERIC_STATUS=status_numeric,
+        IS_LATE=bureau_balance["STATUS"].isin(["1", "2", "3", "4", "5"])
+    ).groupby("SK_ID_BUREAU").agg(
+        BB_MONTHS_COUNT=("STATUS", "count"),
+        BB_LATE_MONTHS_COUNT=("IS_LATE", "sum"),
+        BB_WORST_STATUS=("NUMERIC_STATUS", "max"),
+    )
+
+    # Step 4: Attach each bureau credit to its applicant.
+    # Each credit should belong to only one applicant.
+    credit_history = credit_history.reset_index().merge(
+        bureau[["SK_ID_BUREAU", id_col]],
+        on="SK_ID_BUREAU",
+        how="inner",
+        validate="many_to_one",
+    )
+
+    # Step 5: Aggregate the credit histories for each applicant.
+    applicant_history = credit_history.groupby(id_col).agg(
+        BB_CREDIT_COUNT=("SK_ID_BUREAU", "count"),
+        BB_MONTHS_COUNT=("BB_MONTHS_COUNT", "sum"),
+        BB_LATE_MONTHS_COUNT=("BB_LATE_MONTHS_COUNT", "sum"),
+        BB_WORST_STATUS=("BB_WORST_STATUS", "max"),
+    )
+
+    # Step 6: Calculate the overall late-month share for each applicant.
+    applicant_history["BB_LATE_SHARE"] = (
+        applicant_history["BB_LATE_MONTHS_COUNT"]
+        / applicant_history["BB_MONTHS_COUNT"]
+    )
+
+    # Step 7: Return exactly the required columns, with applicant ID as a column.
+    return applicant_history.reset_index()[
+        [id_col] + BUREAU_BALANCE_FEATURES
+    ]
+
     raise NotImplementedError("TODO(student): aggregate bureau_balance in two stages")

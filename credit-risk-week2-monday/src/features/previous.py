@@ -118,4 +118,54 @@ def aggregate_pos_cash(pos_cash: pd.DataFrame, id_col: str = "SK_ID_CURR") -> pd
           applicant (the same two-stage idea as bureau_balance).
         - Watch the denominators: POS_LATE_SHARE is over months, POS_COMPLETED_SHARE over loans.
     """
+
+    # Step 1: Check that all required columns exist.
+    required = [
+        id_col if col == "SK_ID_CURR" else col
+        for col in POS_CASH_COLUMNS
+    ]
+    require_columns(pos_cash, required, "POS_CASH_balance")
+
+    # Step 2: Aggregate monthly records for each applicant.
+    out = pos_cash.groupby(id_col).agg(
+        POS_MONTHS_COUNT=("SK_ID_PREV", "size"),
+        POS_DPD_MAX=("SK_DPD", "max"),
+        POS_DPD_MEAN=("SK_DPD", "mean"),
+    )
+
+    # Step 3: Count the months when the applicant was late.
+    keys = pos_cash[id_col]
+    late = pos_cash["SK_DPD"].gt(0)
+    out["POS_LATE_SHARE"] = share_where(late, keys)
+
+    # Step 4: Summarize each individual loan.
+    # A loan is completed if at least one monthly record says "Completed".
+    loan_history = pos_cash.groupby(
+        [id_col, "SK_ID_PREV"]
+    ).agg(
+        LOAN_COMPLETED=("NAME_CONTRACT_STATUS",
+                       lambda statuses: statuses.eq("Completed").any())
+    )
+
+    # Step 5: Count distinct loans and calculate the completed-loan share.
+    applicant_loans = loan_history.groupby(level=0).agg(
+        POS_LOAN_COUNT=("LOAN_COMPLETED", "size"),
+        COMPLETED_LOAN_COUNT=("LOAN_COMPLETED", "sum"),
+    )
+
+    applicant_loans["POS_COMPLETED_SHARE"] = (
+        applicant_loans["COMPLETED_LOAN_COUNT"]
+        / applicant_loans["POS_LOAN_COUNT"]
+    )
+
+    # Step 6: Combine the loan counts and monthly statistics.
+    out = out.join(
+        applicant_loans[
+            ["POS_LOAN_COUNT", "POS_COMPLETED_SHARE"]
+        ]
+    )
+
+    # Step 7: Return one row per applicant with exactly the required columns.
+    return out.reset_index()[[id_col, *POS_CASH_FEATURES]]
+
     raise NotImplementedError("TODO(student): aggregate POS_CASH_balance per applicant")

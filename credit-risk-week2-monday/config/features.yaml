@@ -15,5 +15,5 @@ feature_sets:
   application+previous: [previous_application]
   application+bureau+previous: [bureau, previous_application]
   # Carry-over: uncomment each line once its aggregation passes its tests.
-  # application+bureau+previous+bureau_balance: [bureau, previous_application, bureau_balance]
-  # application+bureau+previous+bureau_balance+pos: [bureau, previous_application, bureau_balance, POS_CASH_balance]
+  application+bureau+previous+bureau_balance: [bureau, previous_application, bureau_balance]
+  application+bureau+previous+bureau_balance+pos: [bureau, previous_application, bureau_balance, POS_CASH_balance]

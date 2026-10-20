@@ -40,6 +40,37 @@ def summarize_table(df: pd.DataFrame, name: str) -> dict[str, Any]:
         - A table can have zero rows. Do not divide by zero.
         - Return plain Python numbers so the result can be written as JSON.
     """
+
+    # Get the number of rows and columns.
+    rows, cols = df.shape
+
+    # Calculate memory usage before reducing data types.
+    mb_before = memory_mb(df)
+
+    # Reduce memory usage without modifying the original DataFrame.
+    reduced_df = reduce_memory(df.copy())
+
+    # Calculate memory usage after reducing data types.
+    mb_after = memory_mb(reduced_df)
+
+    # Calculate the percentage of cells that are missing.
+    total_cells = rows * cols
+
+    if total_cells == 0:
+        missing_pct = 0.0
+    else:
+        missing_pct = (df.isna().sum().sum() / total_cells) * 100
+
+    # Return exactly the required keys and plain Python numbers.
+    return {
+        "table": name,
+        "rows": int(rows),
+        "cols": int(cols),
+        "mb_before": float(mb_before),
+        "mb_after": float(mb_after),
+        "missing_pct": float(missing_pct),
+    }
+
     raise NotImplementedError("TODO(student): summarize one table")
 
 
@@ -60,6 +91,35 @@ def summarize_all(config: dict[str, Any]) -> list[dict[str, Any]]:
         - The reports folder may not exist yet.
         - Load and summarize one table at a time so memory stays low.
     """
+
+    from pathlib import Path
+
+    # Get the report directory from the configuration.
+    reports_dir = Path(config["paths"]["reports_dir"])
+
+    # Create the reports directory if it does not exist.
+    reports_dir.mkdir(parents=True, exist_ok=True)
+
+    # Summarize each table in the order specified by the configuration.
+    summaries = []
+
+    for table_name in config["tables"]:
+        # Load one table at a time to reduce memory usage.
+        df = load_table(table_name, config)
+        summary = summarize_table(df, table_name)
+        summaries.append(summary)
+
+        # Release the table before loading the next one.
+        del df
+
+    # Save the summaries as a JSON report.
+    report_path = reports_dir / SUMMARY_FILENAME
+
+    with report_path.open("w", encoding="utf-8") as file:
+        json.dump(summaries, file, indent=2)
+
+    return summaries
+
     raise NotImplementedError("TODO(student): summarize all tables and write the report")
 
 

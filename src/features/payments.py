@@ -72,6 +72,59 @@ def aggregate_installments(
           "on time". Make the missing rows NaN before taking a share, so they drop out.
         - ``share_where`` uses every row as the denominator. Here you need a different one.
     """
+
+    df = installments.copy()
+
+    # A payment is recorded only when both payment date and amount are present.
+    has_payment = (
+        df["DAYS_ENTRY_PAYMENT"].notna()
+        & df["AMT_PAYMENT"].notna()
+    )
+
+    # Positive values mean the payment was late.
+    df["_days_late"] = (
+        df["DAYS_ENTRY_PAYMENT"] - df["DAYS_INSTALMENT"]
+    ).where(has_payment)
+
+    # Missing payments must not be counted as on-time payments.
+    df["_late"] = (
+        df["DAYS_ENTRY_PAYMENT"] > df["DAYS_INSTALMENT"]
+    ).where(has_payment)
+
+    # Only recorded payments can be classified as underpaid.
+    df["_underpaid"] = (
+        df["AMT_PAYMENT"] < df["AMT_INSTALMENT"]
+    ).where(has_payment)
+
+    # Difference: amount paid minus amount due.
+    df["_payment_diff"] = (
+        df["AMT_PAYMENT"] - df["AMT_INSTALMENT"]
+    ).where(has_payment)
+
+    result = df.groupby(id_col, sort=False).agg(
+        INST_COUNT=(id_col, "size"),
+        INST_DAYS_LATE_MAX=("_days_late", "max"),
+        INST_PAYMENT_DIFF_MEAN=("_payment_diff", "mean"),
+    )
+
+    # Shares use only eligible rows, not all installment rows.
+    late_share = (
+        df.groupby(id_col, sort=False)["_late"].mean()
+    )
+    underpaid_share = (
+        df.groupby(id_col, sort=False)["_underpaid"].mean()
+    )
+
+    result["INST_LATE_SHARE"] = late_share
+    result["INST_UNDERPAID_SHARE"] = underpaid_share
+
+    # No recorded late payment means the maximum lateness is zero.
+    result["INST_DAYS_LATE_MAX"] = (
+        result["INST_DAYS_LATE_MAX"].fillna(0).clip(lower=0)
+    )
+
+    return result.reset_index()[[id_col] + INSTALLMENTS_FEATURES]
+
     raise NotImplementedError("TODO(student): aggregate installments_payments per applicant")
 
 
@@ -101,4 +154,24 @@ def aggregate_credit_card(
           there instead of inf, and pandas' mean and max skip NaN.
         - A balance can be slightly negative (the customer overpaid). Keep it.
     """
+
+    df = credit_card.copy()
+
+    # safe_divide returns NaN for invalid or zero limits.
+    df["_utilization"] = safe_divide(
+        df["AMT_BALANCE"],
+        df["AMT_CREDIT_LIMIT_ACTUAL"],
+    )
+
+    result = df.groupby(id_col, sort=False).agg(
+        CC_MONTHS_COUNT=(id_col, "size"),
+        CC_BALANCE_MEAN=("AMT_BALANCE", "mean"),
+        CC_UTILIZATION_MEAN=("_utilization", "mean"),
+        CC_UTILIZATION_MAX=("_utilization", "max"),
+        CC_DRAWINGS_MEAN=("AMT_DRAWINGS_CURRENT", "mean"),
+        CC_DPD_MAX=("SK_DPD", "max"),
+    )
+
+    return result.reset_index()[[id_col] + CREDIT_CARD_FEATURES]
+
     raise NotImplementedError("TODO(student): aggregate credit_card_balance per applicant")

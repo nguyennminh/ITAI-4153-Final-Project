@@ -104,6 +104,51 @@ def build_feature_table(tables: dict[str, pd.DataFrame], config: dict[str, Any])
           applied in the model pipeline, on the train split only; doing them here would use
           validation applicants' data and would run twice.
     """
+
+    # 1. Validate inputs before aggregation so all input problems are reported.
+    validate_inputs(tables)
+
+    # 2. Get the original application table.
+    app = tables["application_train"]
+
+    # 3. Aggregate each child table to one row per applicant.
+    feature_tables = {
+        "bureau": aggregate_bureau(tables["bureau"]),
+        "previous_application": aggregate_previous(
+            tables["previous_application"]
+        ),
+        "bureau_balance": aggregate_bureau_balance(
+            tables["bureau_balance"],
+            tables["bureau"],
+        ),
+        "POS_CASH_balance": aggregate_pos_cash(
+            tables["POS_CASH_balance"]
+        ),
+        "installments_payments": aggregate_installments(
+            tables["installments_payments"]
+        ),
+        "credit_card_balance": aggregate_credit_card(
+            tables["credit_card_balance"]
+        ),
+    }
+
+    # 4. Join all aggregated features onto the application table.
+    features = join_features(app, feature_tables)
+
+    # 5. Add the four ratio features.
+    features = add_ratio_features(features)
+
+    # 6. Validate the completed feature table.
+    validate_features(
+        features,
+        EXPECTED_FEATURES,
+        len(app),
+        config,
+    )
+
+    return features
+
+
     raise NotImplementedError("TODO(student): build and validate the feature table")
 
 

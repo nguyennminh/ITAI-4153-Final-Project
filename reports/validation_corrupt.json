@@ -1,0 +1,14 @@
+{
+  "sample_dir": "data/corrupt",
+  "status": "fail",
+  "stage": "input",
+  "problems": [
+    "application_train: missing column(s) AMT_INCOME_TOTAL",
+    "application_train.SK_ID_CURR: 3 value(s) appear more than once (e.g. 166041, 278060, 292459)",
+    "application_train.AMT_CREDIT: 250 missing value(s), none allowed",
+    "application_train.AMT_ANNUITY: 15 row(s) fail 'greater_than(0)' (e.g. -1500.0)",
+    "application_train.DAYS_BIRTH: 40 row(s) fail 'less_than(0)' (e.g. 17057, 12960, 15472)",
+    "previous_application.NAME_CONTRACT_STATUS: 4,580 row(s) fail 'isin(['Approved', 'Refused', 'Canceled', 'Unused offer'])' (e.g. APPROVED, CANCELED, REFUSED)",
+    "installments_payments.AMT_PAYMENT: 30 row(s) fail 'greater_than_or_equal_to(0)' (e.g. -32821.66, -27131.5, -13004.74)"
+  ]
+}

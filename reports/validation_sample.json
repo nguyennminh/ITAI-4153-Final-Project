@@ -1,0 +1,9 @@
+{
+  "sample_dir": "data/sample",
+  "status": "pass",
+  "stage": null,
+  "problems": [],
+  "rows": 5000,
+  "columns": 165,
+  "output": "data/features/features.parquet"
+}

@@ -139,6 +139,56 @@ def application_schema() -> pa.DataFrameSchema:
           most rules. For DAYS_EMPLOYED write your own:
           ``pa.Check(lambda s: ..., error="...")`` where the lambda returns True/False per row.
     """
+
+    columns = required_columns([
+        "SK_ID_CURR",
+        "TARGET",
+        "AMT_INCOME_TOTAL",
+        "AMT_CREDIT",
+        "AMT_ANNUITY",
+        "AMT_GOODS_PRICE",
+        "DAYS_BIRTH",
+        "DAYS_EMPLOYED",
+    ])
+
+    columns.update({
+        "SK_ID_CURR": pa.Column(nullable=False, unique=True),
+        "TARGET": pa.Column(
+            checks=pa.Check.isin([0, 1]),
+            nullable=False,
+        ),
+        "AMT_INCOME_TOTAL": pa.Column(
+            checks=pa.Check.gt(0),
+            nullable=False,
+        ),
+        "AMT_CREDIT": pa.Column(
+            checks=pa.Check.gt(0),
+            nullable=False,
+        ),
+        "AMT_ANNUITY": pa.Column(
+            checks=pa.Check.gt(0),
+            nullable=True,
+        ),
+        "AMT_GOODS_PRICE": pa.Column(
+            checks=pa.Check.gt(0),
+            nullable=True,
+        ),
+        "DAYS_BIRTH": pa.Column(
+            checks=pa.Check.lt(0),
+            nullable=False,
+        ),
+        "DAYS_EMPLOYED": pa.Column(
+            checks=pa.Check(
+                lambda s: (s <= 0) | (s == DAYS_EMPLOYED_SENTINEL),
+                error="must be <= 0 or the DAYS_EMPLOYED_SENTINEL",
+            ),
+            nullable=False,
+        ),
+    })
+
+    return pa.DataFrameSchema(columns)
+
+
     raise NotImplementedError("TODO(student): write the application_train schema")
 
 
@@ -161,6 +211,81 @@ def child_schemas() -> dict[str, pa.DataFrameSchema]:
         - bureau_balance has no SK_ID_CURR; its id is SK_ID_BUREAU.
         - SK_ID_PREV repeats in the monthly tables (one row per month), so it is not unique.
     """
+
+    schemas = {
+        "bureau": bureau_schema(),
+    }
+
+    # Bureau balance
+    columns = required_columns(BUREAU_BALANCE_COLUMNS)
+    columns.update({
+        "SK_ID_BUREAU": pa.Column(nullable=False),
+        "STATUS": pa.Column(
+            checks=pa.Check.isin(BUREAU_BALANCE_STATUSES),
+            nullable=False,
+        ),
+    })
+    schemas["bureau_balance"] = pa.DataFrameSchema(columns)
+
+    # Previous applications
+    columns = required_columns(PREVIOUS_COLUMNS)
+    columns.update({
+        "SK_ID_CURR": pa.Column(nullable=False),
+        "SK_ID_PREV": pa.Column(nullable=False),
+        "NAME_CONTRACT_STATUS": pa.Column(
+            checks=pa.Check.isin(PREVIOUS_STATUSES),
+            nullable=False,
+        ),
+    })
+    schemas["previous_application"] = pa.DataFrameSchema(columns)
+
+    # POS cash balance
+    columns = required_columns(POS_CASH_COLUMNS)
+    columns.update({
+        "SK_ID_CURR": pa.Column(nullable=False),
+        "SK_ID_PREV": pa.Column(nullable=False),
+        "SK_DPD": pa.Column(
+            checks=pa.Check.ge(0),
+            nullable=True,
+        ),
+    })
+    schemas["POS_CASH_balance"] = pa.DataFrameSchema(columns)
+
+    # Installment payments
+    columns = required_columns(INSTALLMENTS_COLUMNS)
+    columns.update({
+        "SK_ID_CURR": pa.Column(nullable=False),
+        "SK_ID_PREV": pa.Column(nullable=False),
+        "AMT_INSTALMENT": pa.Column(
+            checks=pa.Check.ge(0),
+            nullable=True,
+        ),
+        "AMT_PAYMENT": pa.Column(
+            checks=pa.Check.ge(0),
+            nullable=True,
+        ),
+    })
+    schemas["installments_payments"] = pa.DataFrameSchema(columns)
+
+    # Credit card balance
+    columns = required_columns(CREDIT_CARD_COLUMNS)
+    columns.update({
+        "SK_ID_CURR": pa.Column(nullable=False),
+        "SK_ID_PREV": pa.Column(nullable=False),
+        "AMT_CREDIT_LIMIT_ACTUAL": pa.Column(
+            checks=pa.Check.ge(0),
+            nullable=True,
+        ),
+        "SK_DPD": pa.Column(
+            checks=pa.Check.ge(0),
+            nullable=True,
+        ),
+    })
+    schemas["credit_card_balance"] = pa.DataFrameSchema(columns)
+
+    return schemas
+
+
     raise NotImplementedError("TODO(student): write the child table schemas")
 
 
@@ -196,6 +321,74 @@ def feature_schema(
         - A column can have several checks: ``checks=[pa.Check.ge(0), is_finite()]``.
         - Apply the missing-share limit to the suffix columns too (except ``_COUNT``).
     """
+
+    columns = {
+        "SK_ID_CURR": pa.Column(
+            nullable=False,
+            unique=True,
+        )
+    }
+
+    # Validate every expected feature.
+    for feature in expected_features:
+        if feature == "SK_ID_CURR":
+            continue
+
+        if feature.endswith("_COUNT"):
+            checks = [pa.Check.ge(0)]
+            nullable = False
+
+        elif feature.endswith("_SHARE") or feature.endswith("_RATE"):
+            checks = [
+                pa.Check.ge(0),
+                pa.Check.le(1),
+            ]
+            nullable = True
+
+        elif feature.endswith("_RATIO"):
+            checks = [
+                pa.Check.ge(0),
+                is_finite(),
+            ]
+            nullable = True
+
+        else:
+            checks = []
+            nullable = True
+
+        # Apply missing-value limits to every feature except COUNT.
+        if not feature.endswith("_COUNT"):
+            limit = null_limits.get(
+                feature,
+                null_limits["default"],
+            )
+            checks.append(max_null_share(limit))
+
+        columns[feature] = pa.Column(
+            checks=checks if checks else None,
+            nullable=nullable,
+        )
+
+    # Also validate columns named explicitly in null_limits,
+    # even when they are not engineered features.
+    for column, limit in null_limits.items():
+        if column == "default" or column in columns:
+            continue
+
+        columns[column] = pa.Column(
+            checks=max_null_share(limit),
+            nullable=True,
+        )
+
+    return pa.DataFrameSchema(
+        columns,
+        checks=pa.Check(
+            lambda df: len(df) == n_applicants,
+            error=f"expected exactly {n_applicants} rows",
+        ),
+    )
+
+
     raise NotImplementedError("TODO(student): write the feature table schema")
 
 

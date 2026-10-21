@@ -36,4 +36,31 @@ def add_ratio_features(app: pd.DataFrame) -> pd.DataFrame:
         - ``require_columns(app, RATIO_INPUTS, "application_train")`` first.
         - ``safe_divide`` already handles the zero and missing cases.
     """
+
+    require_columns(app, RATIO_INPUTS, "application_train")
+
+    result = app.copy()
+
+    result["CREDIT_INCOME_RATIO"] = safe_divide(
+        result["AMT_CREDIT"],
+        result["AMT_INCOME_TOTAL"],
+    )
+
+    result["ANNUITY_INCOME_RATIO"] = safe_divide(
+        result["AMT_ANNUITY"],
+        result["AMT_INCOME_TOTAL"],
+    )
+
+    result["CREDIT_GOODS_RATIO"] = safe_divide(
+        result["AMT_CREDIT"],
+        result["AMT_GOODS_PRICE"],
+    )
+
+    result["ANNUITY_CREDIT_RATIO"] = safe_divide(
+        result["AMT_ANNUITY"],
+        result["AMT_CREDIT"],
+    )
+
+    return result
+
     raise NotImplementedError("TODO(student): add the four ratio features")

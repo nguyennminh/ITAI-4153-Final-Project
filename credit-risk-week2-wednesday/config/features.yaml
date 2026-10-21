@@ -1,0 +1,35 @@
+# PROVIDED: Week 2 settings, read together with config.yaml. Paths are relative to the
+# repository root.
+
+paths:
+  comparison_file: reports/auc_comparison.json   # written by python run.py compare
+  leakage_table: docs/leakage_table.md           # you copy it from docs/leakage_table_template.md
+  feature_dictionary: docs/feature_dictionary.md # you copy it from docs/feature_dictionary_template.md
+  features_dir: data/features                    # python run.py features writes here (never committed)
+  reports_dir: reports                           # validation reports go here
+
+n_bootstrap: 1000   # resamples for the 95% intervals in the comparison
+
+# Rules the feature table must pass (see src/validate.py).
+validation:
+  max_null_share:          # largest allowed share of missing values per column
+    default: 0.95          # every engineered feature not listed below
+    AMT_CREDIT: 0.0
+    AMT_INCOME_TOTAL: 0.0
+    DAYS_BIRTH: 0.0
+    CREDIT_INCOME_RATIO: 0.0
+    ANNUITY_INCOME_RATIO: 0.01
+
+# Feature sets for python run.py compare. Each set adds ONE table to the set above it, so the
+# change from one row to the next is what that table contributes. "application" (no child
+# tables) is your Week 1 baseline: keep it first. "ratios" is not a table: it adds the four
+# ratio features.
+feature_sets:
+  application: []
+  +bureau: [bureau]
+  +previous_application: [bureau, previous_application]
+  +bureau_balance: [bureau, previous_application, bureau_balance]
+  +POS_CASH: [bureau, previous_application, bureau_balance, POS_CASH_balance]
+  +installments: [bureau, previous_application, bureau_balance, POS_CASH_balance, installments_payments]
+  +credit_card: [bureau, previous_application, bureau_balance, POS_CASH_balance, installments_payments, credit_card_balance]
+  +ratios: [bureau, previous_application, bureau_balance, POS_CASH_balance, installments_payments, credit_card_balance, ratios]

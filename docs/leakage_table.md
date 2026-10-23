@@ -58,6 +58,21 @@ observed future outcome was used. Future realized outcomes would need exclusion.
 | POS_DPD_MEAN | POS_CASH_balance | Yes | Mean SK_DPD uses only previously observed months; POS_CASH_balance MONTHS_BALANCE max -1. |
 | POS_LATE_SHARE | POS_CASH_balance | Yes | Late-month numerator and month denominator both use POS_CASH_balance records with MONTHS_BALANCE max -1. |
 | POS_COMPLETED_SHARE | POS_CASH_balance | Yes | Completed status is counted only when already recorded in a loan month; POS_CASH_balance MONTHS_BALANCE max -1 confirms completion observations predate application. |
+| INST_COUNT | installments_payments | No | Counts historical installment payment records; safe if only records available by the application date are included. |
+| INST_LATE_SHARE | installments_payments | No | Measures the share of historical installments paid late; safe if future payment records are excluded. |
+| INST_DAYS_LATE_MAX | installments_payments | No | Measures the maximum historical payment delay; safe if calculated only from payments recorded before the application date. |
+| INST_UNDERPAID_SHARE | installments_payments | No | Measures the share of historical installments paid below the amount due; safe if future payments are excluded. |
+| INST_PAYMENT_DIFF_MEAN | installments_payments | No | Measures the average difference between historical payments and amounts due; safe if only pre-application records are used. |
+| CC_MONTHS_COUNT | credit_card_balance | No | Counts historical monthly credit-card records; safe if records after the application date are excluded. |
+| CC_BALANCE_MEAN | credit_card_balance | No | Measures the average historical credit-card balance; safe if based only on balances available at application time. |
+| CC_UTILIZATION_MEAN | credit_card_balance | No | Measures average historical credit utilization; safe if only pre-application balances and credit limits are used. |
+| CC_UTILIZATION_MAX | credit_card_balance | No | Measures maximum historical credit utilization; safe if calculated only from records available by application time. |
+| CC_DRAWINGS_MEAN | credit_card_balance | No | Measures average historical credit-card drawings; safe if future transactions are excluded. |
+| CC_DPD_MAX | credit_card_balance | No | Measures the maximum historical days past due; safe if it excludes delinquency information recorded after the application date. |
+| CREDIT_INCOME_RATIO | application_train | No | Divides requested credit by applicant income recorded in the application; both values are available at application time. |
+| ANNUITY_INCOME_RATIO | application_train | No | Divides the proposed loan annuity by applicant income; both values are available at application time. |
+| CREDIT_GOODS_RATIO | application_train | No | Divides requested credit by the price of the goods being financed; these application values are available at application time. |
+| ANNUITY_CREDIT_RATIO | application_train | No | Divides the proposed loan annuity by requested credit; both values are available at application time. |
 
 ## Application columns worth a second look
 

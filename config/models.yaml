@@ -1,0 +1,41 @@
+# PROVIDED: Week 3 settings, read together with config.yaml and features.yaml.
+# Paths are relative to the repository root. You add your own runs at the bottom.
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db   # one database file in the repository root (never committed)
+  experiment: credit-risk-week3
+
+cv_folds: 5          # stratified folds on the TRAIN split (4,000 applicants, about 320 defaults)
+n_bootstrap: 1000    # resamples for the 95% interval on the validation AUC
+runs_file: reports/mlflow_runs.csv   # python run.py runs exports every run here
+
+# python run.py train tree_tuned tries every combination below (6 x 5 = 30 trees).
+tree_grid:
+  max_depth: [3, 4, 5, 6, 8, 12]
+  min_samples_leaf: [10, 25, 50, 100, 200]
+
+# Named runs for python run.py train NAME. Each run has:
+#   model:       logistic_regression, decision_tree, or hist_gradient_boosting
+#                (lightgbm / xgboost also work if you write them in make_model)
+#   params:      settings passed to the model (leave out for the defaults)
+#   undersample: keep this many non-defaulters per defaulter, in the training rows only
+runs:
+  baseline_lr:
+    model: logistic_regression        # your Week 1 pipeline, now on every Week 2 feature
+  tree_unlimited:
+    model: decision_tree              # no limits at all: compare its train AUC with its CV AUC
+  hgb_default:
+    model: hist_gradient_boosting     # every setting at its default
+
+  # Variations of hgb_default. Change ONE thing per run, so you know what made the difference.
+  hgb_balanced:
+    model: hist_gradient_boosting
+    params: {class_weight: balanced}  # weight each default about 11 times more
+  hgb_undersample:
+    model: hist_gradient_boosting
+    undersample: 3                    # 3 non-defaulters per defaulter
+
+  # TODO(student): add at least one variation of your own here in class, and at least two
+  # more at home (5 or more in total). Ideas: learning_rate, max_iter, max_leaf_nodes,
+  # max_depth, min_samples_leaf, l2_regularization, max_features, early_stopping.
+  # Give each run a name that says what changed, for example hgb_lr003.

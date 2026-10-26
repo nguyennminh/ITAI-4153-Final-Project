@@ -9,3 +9,5 @@ kaggle>=1.6
 matplotlib>=3.7
 pandera>=0.20
 pyarrow>=14
+mlflow>=3.0
+optuna>=4.0

@@ -4,6 +4,8 @@
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+# MLflow uses an old SQLAlchemy option; the warning is about MLflow, not your code.
+filterwarnings = ["ignore:.*noload.*:DeprecationWarning"]
 
 [tool.ruff]
 line-length = 100

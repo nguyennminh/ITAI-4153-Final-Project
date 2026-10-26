@@ -9,8 +9,15 @@ data/
 kaggle.json
 access_token
 
-# Tools
+# Experiment tracking (Week 3): the MLflow and Optuna databases and saved models stay on
+# your machine. python run.py runs exports the run table to reports/ for your submission.
 mlruns/
+mlartifacts/
+mlflow.db
+optuna.db
+models/
+
+# Tools
 reports/*.tmp
 .venv/
 __pycache__/

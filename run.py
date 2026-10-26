@@ -10,15 +10,21 @@ Usage (from the repository root):
     python run.py baseline     train the baseline and write reports/metrics.json
     python run.py features     build and validate data/features/features.parquet
     python run.py compare      baseline on growing feature sets -> reports/auc_comparison.json
+    python run.py train        train runs from config/models.yaml and log them to MLflow
+    python run.py ui           open the MLflow UI at http://127.0.0.1:5050 (Ctrl+C to stop)
+    python run.py runs         export every MLflow run to reports/mlflow_runs.csv
     python run.py test         run the tests
     python run.py lint         check code style
-    python run.py check        run the Week 2 checks (--stage wed: only the Wednesday checkpoint)
+    python run.py check        run the Week 3 checks (--stage mon: only the Monday checkpoint)
+    python run.py check2       run the Week 2 checks
     python run.py check1       run the Week 1 checks
-    python run.py all          sample (if missing), summary, baseline, features, compare, check
+    python run.py all          sample (if missing), summary, baseline, features, train --all,
+                               runs, check
 
 Options for ``sample``: ``--force`` rebuilds an existing sample, and ``--raw-dir PATH`` uses
 a full download in another folder instead of data/raw.
 Options for ``features``: ``--sample-dir PATH`` reads the tables from another folder.
+Options for ``train``: run names from config/models.yaml, ``tree_tuned``, or ``--all``.
 
 Each command runs the plain ``python -m ...`` command printed before it, so you can always
 run that command yourself instead.
@@ -26,6 +32,7 @@ run that command yourself instead.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import venv
@@ -43,11 +50,15 @@ COMMANDS = {
     "baseline": "train the baseline and write reports/metrics.json",
     "features": "build and validate data/features/features.parquet (--sample-dir PATH)",
     "compare": "baseline on growing feature sets -> reports/auc_comparison.json",
+    "train": "train runs from config/models.yaml (NAME ..., tree_tuned, --all)",
+    "ui": "open the MLflow UI at http://127.0.0.1:5050 (Ctrl+C to stop)",
+    "runs": "export every MLflow run to reports/mlflow_runs.csv",
     "test": "run the tests",
     "lint": "check code style",
-    "check": "run the Week 2 checks",
+    "check": "run the Week 3 checks (--stage mon)",
+    "check2": "run the Week 2 checks",
     "check1": "run the Week 1 checks",
-    "all": "sample (if missing), summary, baseline, features, compare, check",
+    "all": "sample (if missing), summary, baseline, features, train --all, runs, check",
 }
 MODULES = {
     "sample": ["-m", "scripts.make_sample"],
@@ -55,9 +66,14 @@ MODULES = {
     "baseline": ["-m", "src.baseline"],
     "features": ["-m", "src.make_features"],
     "compare": ["-m", "src.compare"],
+    "train": ["-m", "src.train"],
+    # Port 5050, because macOS uses MLflow's usual port 5000 for AirPlay.
+    "ui": ["-m", "mlflow", "ui", "--backend-store-uri", "sqlite:///mlflow.db", "--port", "5050"],
+    "runs": ["-m", "src.tracking"],
     "test": ["-m", "pytest"],
     "lint": ["-m", "ruff", "check", "."],
-    "check": ["-m", "scripts.check_week2"],
+    "check": ["-m", "scripts.check_week3"],
+    "check2": ["-m", "scripts.check_week2"],
     "check1": ["-m", "scripts.check_week1"],
 }
 
@@ -73,7 +89,9 @@ def python() -> str:
 def run(args: list[str]) -> int:
     """Print a command, run it from the repository root, and return its exit code."""
     print("$ python " + " ".join(args[1:]), flush=True)
-    return subprocess.call(args, cwd=ROOT)
+    # Hide MLflow's log line about AI coding agents; it is not about your project.
+    env = {**os.environ, "MLFLOW_DISABLE_AGENT_HINT": "1"}
+    return subprocess.call(args, cwd=ROOT, env=env)
 
 
 # PROVIDED
@@ -95,10 +113,11 @@ def setup() -> int:
 def run_all() -> int:
     """Run the whole path so far in order, stopping at the first failure."""
     steps = ([] if SAMPLE_FILE.exists() else ["sample"]) + [
-        "summary", "baseline", "features", "compare", "check",
+        "summary", "baseline", "features", "train", "runs", "check",
     ]
     for step in steps:
-        code = run([python(), *MODULES[step]])
+        extra = ["--all"] if step == "train" else []
+        code = run([python(), *MODULES[step], *extra])
         if code != 0:
             print(f"\n'{step}' failed; stopping.")
             return code

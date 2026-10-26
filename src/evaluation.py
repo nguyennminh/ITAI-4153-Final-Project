@@ -25,7 +25,6 @@ from src.models import fit_model  # noqa: F401
 from src.uncertainty import bootstrap_auc_ci
 
 
-# TODO(student)
 def cross_validate_auc(
     model: Pipeline, X: pd.DataFrame, y: pd.Series, n_folds: int, seed: int,
     undersample_ratio: float | None = None,
@@ -57,7 +56,23 @@ def cross_validate_auc(
           itself in every fold would reuse one object for all folds.
         - Start with ``oof = np.full(len(y), np.nan)`` and fill one fold at a time.
     """
-    raise NotImplementedError("TODO(student): stratified k-fold AUC with out-of-fold scores")
+    folds = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
+    oof = np.full(len(y), np.nan)
+    fold_aucs = []
+    for train_idx, valid_idx in folds.split(X, y):
+        fitted = fit_model(
+            clone(model), X.iloc[train_idx], y.iloc[train_idx],
+            undersample_ratio=undersample_ratio, seed=seed,
+        )
+        scores = fitted.predict_proba(X.iloc[valid_idx])[:, 1]
+        oof[valid_idx] = scores
+        fold_aucs.append(float(roc_auc_score(y.iloc[valid_idx], scores)))
+    return {
+        "fold_aucs": fold_aucs,
+        "mean": float(np.mean(fold_aucs)),
+        "std": float(np.std(fold_aucs)),
+        "oof": oof,
+    }
 
 
 # PROVIDED

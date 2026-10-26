@@ -44,7 +44,6 @@ def tree_preprocessor(numeric_cols: list[str], categorical_cols: list[str]) -> C
     ])
 
 
-# TODO(student)
 def make_model(
     spec: dict[str, Any], numeric_cols: list[str], categorical_cols: list[str],
     config: dict[str, Any],
@@ -80,10 +79,19 @@ def make_model(
     name = spec["model"]
     if name == "logistic_regression":
         return build_model(config, build_preprocessor(numeric_cols, categorical_cols))
-    raise NotImplementedError("TODO(student): build the decision tree and boosting pipelines")
+    params = {"random_state": config["seed"], **(spec.get("params") or {})}
+    if name == "decision_tree":
+        model = DecisionTreeClassifier(**params)
+    elif name == "hist_gradient_boosting":
+        model = HistGradientBoostingClassifier(**params)
+    else:
+        raise ValueError(f"Unknown model {name!r}. Expected one of {sorted(MODEL_NAMES)}")
+    return Pipeline([
+        ("preprocess", tree_preprocessor(numeric_cols, categorical_cols)),
+        ("model", model),
+    ])
 
 
-# TODO(student)
 def undersample(
     X: pd.DataFrame, y: pd.Series, ratio: float, seed: int
 ) -> tuple[pd.DataFrame, pd.Series]:
@@ -109,7 +117,13 @@ def undersample(
         - Only ever call this on TRAINING rows. ``fit_model`` and your
           ``cross_validate_auc`` make sure of that: never undersample a validation fold.
     """
-    raise NotImplementedError("TODO(student): keep all defaulters and ratio x as many others")
+    labels = y.to_numpy()
+    pos = np.flatnonzero(labels == 1)
+    neg = np.flatnonzero(labels == 0)
+    k = min(len(neg), int(ratio * len(pos)))
+    rng = np.random.default_rng(seed)
+    keep = np.sort(np.concatenate((pos, rng.choice(neg, size=k, replace=False))))
+    return X.iloc[keep].reset_index(drop=True), y.iloc[keep].reset_index(drop=True)
 
 
 # PROVIDED

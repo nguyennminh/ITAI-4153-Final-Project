@@ -14,7 +14,7 @@ the same seed, so the only thing that differs between two runs is the model and 
 from __future__ import annotations
 
 import argparse
-import itertools  # noqa: F401  (for you to use)
+import itertools
 import json
 import time
 from typing import Any
@@ -100,7 +100,6 @@ def train_and_log(
     return {"run_id": run.info.run_id, "name": name, "spec": spec, **metrics}
 
 
-# TODO(student)
 def tune_tree(data: TrainingData, config: dict[str, Any]) -> dict[str, Any]:
     """Grid-search the decision tree's max_depth and min_samples_leaf with stratified CV.
 
@@ -130,7 +129,26 @@ def tune_tree(data: TrainingData, config: dict[str, Any]) -> dict[str, Any]:
           "min_samples_leaf": leaf}}``.
         - Look at ``train_and_log`` for how to open a run with tags.
     """
-    raise NotImplementedError("TODO(student): grid-search the tree and train the winner")
+    grid = config["week3"]["tree_grid"]
+    best = None
+    with mlflow.start_run(run_name="tree_tuning",
+                          tags=run_tags(config, data.data_version)):
+        for depth, leaf in itertools.product(grid["max_depth"], grid["min_samples_leaf"]):
+            spec = {"model": "decision_tree",
+                    "params": {"max_depth": depth, "min_samples_leaf": leaf}}
+            result = train_and_log(f"tree_d{depth}_l{leaf}", spec, data, config,
+                                   nested=True, log_model=False)
+            if best is None or result["cv_auc_mean"] > best["cv_auc_mean"]:
+                best = result
+
+        if best is None:
+            raise ValueError("tree_grid must contain at least one parameter combination")
+        params = best["spec"]["params"]
+        mlflow.log_params({"best_max_depth": params["max_depth"],
+                           "best_min_samples_leaf": params["min_samples_leaf"]})
+        mlflow.log_metric("best_cv_auc_mean", best["cv_auc_mean"])
+
+    return train_and_log(TUNED_TREE, best["spec"], data, config, log_model=True)
 
 
 # PROVIDED

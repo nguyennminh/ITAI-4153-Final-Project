@@ -35,7 +35,6 @@ runs:
     model: hist_gradient_boosting
     undersample: 3                    # 3 non-defaulters per defaulter
 
-  # TODO(student): add at least one variation of your own here in class, and at least two
-  # more at home (5 or more in total). Ideas: learning_rate, max_iter, max_leaf_nodes,
-  # max_depth, min_samples_leaf, l2_regularization, max_features, early_stopping.
-  # Give each run a name that says what changed, for example hgb_lr003.
+  hgb_l2:
+    model: hist_gradient_boosting
+    params: {l2_regularization: 1.0}

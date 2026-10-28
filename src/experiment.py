@@ -5,6 +5,8 @@
 Every run in Week 3 trains on the same rows: the train split of your Week 2 feature table
 (data/features/features.parquet), cleaned with YOUR Week 1 ``clean_application``. The
 validation split is only ever scored, never fitted on.
+
+Wednesday adds config/final.yaml (as ``config["week3"]["final"]``) and the report files.
 """
 
 from __future__ import annotations
@@ -23,6 +25,15 @@ from src.features.common import load_week2_config
 from src.utils import DEFAULT_CONFIG
 
 MODELS_CONFIG = "models.yaml"
+FINAL_CONFIG = "final.yaml"
+# Files the Wednesday commands write (relative to the repository root).
+OUTPUTS = {
+    "optuna_best": "reports/optuna_best.json",
+    "threshold": "reports/threshold.json",
+    "final_model": "reports/final_model.json",
+    "cost_plot": "reports/figures/cost_curve.png",
+    "reliability_plot": "reports/figures/reliability.png",
+}
 
 
 @dataclass
@@ -44,10 +55,12 @@ class TrainingData:
 
 # PROVIDED
 def load_week3_config(path: str | Path = DEFAULT_CONFIG) -> dict[str, Any]:
-    """Load config.yaml and features.yaml (as in Week 2) plus models.yaml as ``config["week3"]``.
+    """Load config.yaml and features.yaml (as in Week 2), models.yaml as ``config["week3"]``,
+    and final.yaml as ``config["week3"]["final"]``.
 
-    The MLflow database path is made absolute, so runs land in the same database whichever
-    folder you start from.
+    The MLflow and Optuna database paths are made absolute, so runs land in the same database
+    whichever folder you start from. ``config["week3"]["outputs"]`` maps each OUTPUTS key to
+    an absolute Path.
     """
     config = load_week2_config(path)
     models_path = Path(path).resolve().parent / MODELS_CONFIG
@@ -56,13 +69,28 @@ def load_week3_config(path: str | Path = DEFAULT_CONFIG) -> dict[str, Any]:
     with models_path.open() as f:
         week3 = yaml.safe_load(f)
     root = config["root"]
-    uri = week3["mlflow"]["tracking_uri"]
-    if uri.startswith("sqlite:///") and not Path(uri.removeprefix("sqlite:///")).is_absolute():
-        week3["mlflow"]["tracking_uri"] = f"sqlite:///{root / uri.removeprefix('sqlite:///')}"
+    week3["mlflow"]["tracking_uri"] = _absolute_sqlite(week3["mlflow"]["tracking_uri"], root)
     week3["runs_file"] = root / week3["runs_file"]
     week3["runs"] = week3.get("runs") or {}
+    final_path = models_path.parent / FINAL_CONFIG
+    if not final_path.exists():
+        raise FileNotFoundError(f"{final_path} not found; copy it from the Wednesday overlay")
+    with final_path.open() as f:
+        week3["final"] = yaml.safe_load(f)
+    optuna = week3["final"]["optuna"]
+    optuna["storage"] = _absolute_sqlite(optuna["storage"], root)
+    week3["outputs"] = {key: root / value for key, value in OUTPUTS.items()}
     config["week3"] = week3
     return config
+
+
+# PROVIDED
+def _absolute_sqlite(uri: str, root: Path) -> str:
+    """sqlite:///name.db -> sqlite:////full/path/to/repo/name.db (other URIs unchanged)."""
+    path = uri.removeprefix("sqlite:///")
+    if uri.startswith("sqlite:///") and not Path(path).is_absolute():
+        return f"sqlite:///{root / path}"
+    return uri
 
 
 # PROVIDED
@@ -93,7 +121,7 @@ def load_training_data(
 
     Args:
         config: The loaded Week 3 config.
-        features: Keep only these feature columns (Wednesday's pruning). None keeps all.
+        features: Keep only these feature columns. None (the default) keeps all.
 
     Returns:
         A TrainingData with the train and validation rows and the feature columns, split

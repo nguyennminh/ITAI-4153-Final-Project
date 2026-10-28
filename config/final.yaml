@@ -1,0 +1,31 @@
+# PROVIDED: Week 3 Wednesday settings: tuning, the decision rule, and the model you ship.
+# Read together with config.yaml, features.yaml, and models.yaml.
+
+# The costs from your Week 1 problem statement, in cost units per applicant.
+costs:
+  approve_defaulter: 10   # we lend, they default (a false negative): lost principal
+  reject_good: 1          # we turn away someone who would have repaid (a false positive)
+
+# Thresholds tried by the cost search. Score >= threshold means "reject".
+threshold_grid: {start: 0.01, stop: 0.60, step: 0.005}
+
+# The model you tune, threshold, calibrate, and ship.
+model:
+  model: hist_gradient_boosting
+  params: best_trial      # best_trial = the best Optuna trial so far (reports/optuna_best.json),
+                          # or replace it with the settings themselves, for example
+                          # {learning_rate: 0.03, max_iter: 300}
+
+optuna:
+  study: hgb-tuning
+  storage: sqlite:///optuna.db   # the study is saved, so a second `tune` continues it
+  trials_per_run: 15             # python run.py tune adds this many trials each time
+  target_trials: 30
+
+calibration: isotonic     # isotonic, or sigmoid (Platt scaling)
+
+registry:
+  name: credit-risk
+  alias: staging
+
+compare_to: tree_tuned    # the Monday run your modeling report compares against

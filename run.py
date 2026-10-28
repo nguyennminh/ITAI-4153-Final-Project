@@ -13,13 +13,16 @@ Usage (from the repository root):
     python run.py train        train runs from config/models.yaml and log them to MLflow
     python run.py ui           open the MLflow UI at http://127.0.0.1:5050 (Ctrl+C to stop)
     python run.py runs         export every MLflow run to reports/mlflow_runs.csv
+    python run.py tune         add Optuna trials to the tuning study (--trials N)
+    python run.py threshold    choose the decision threshold from the costs
+    python run.py final        calibrate, check, and register the final model
     python run.py test         run the tests
     python run.py lint         check code style
-    python run.py check        run the Week 3 checks (--stage mon: only the Monday checkpoint)
+    python run.py check        run the Week 3 checks (--stage mon / --stage wed: one checkpoint)
     python run.py check2       run the Week 2 checks
     python run.py check1       run the Week 1 checks
     python run.py all          sample (if missing), summary, baseline, features, train --all,
-                               runs, check
+                               tune, threshold, final, runs, check
 
 Options for ``sample``: ``--force`` rebuilds an existing sample, and ``--raw-dir PATH`` uses
 a full download in another folder instead of data/raw.
@@ -53,12 +56,15 @@ COMMANDS = {
     "train": "train runs from config/models.yaml (NAME ..., tree_tuned, --all)",
     "ui": "open the MLflow UI at http://127.0.0.1:5050 (Ctrl+C to stop)",
     "runs": "export every MLflow run to reports/mlflow_runs.csv",
+    "tune": "add Optuna trials to the tuning study (--trials N)",
+    "threshold": "choose the decision threshold from the costs",
+    "final": "calibrate, check, and register the final model",
     "test": "run the tests",
     "lint": "check code style",
-    "check": "run the Week 3 checks (--stage mon)",
+    "check": "run the Week 3 checks (--stage mon, --stage wed)",
     "check2": "run the Week 2 checks",
     "check1": "run the Week 1 checks",
-    "all": "sample (if missing), summary, baseline, features, train --all, runs, check",
+    "all": "sample (if missing) ... train --all, tune, threshold, final, runs, check",
 }
 MODULES = {
     "sample": ["-m", "scripts.make_sample"],
@@ -70,6 +76,9 @@ MODULES = {
     # Port 5050, because macOS uses MLflow's usual port 5000 for AirPlay.
     "ui": ["-m", "mlflow", "ui", "--backend-store-uri", "sqlite:///mlflow.db", "--port", "5050"],
     "runs": ["-m", "src.tracking"],
+    "tune": ["-m", "src.tune"],
+    "threshold": ["-m", "src.cost"],
+    "final": ["-m", "src.final"],
     "test": ["-m", "pytest"],
     "lint": ["-m", "ruff", "check", "."],
     "check": ["-m", "scripts.check_week3"],
@@ -113,7 +122,8 @@ def setup() -> int:
 def run_all() -> int:
     """Run the whole path so far in order, stopping at the first failure."""
     steps = ([] if SAMPLE_FILE.exists() else ["sample"]) + [
-        "summary", "baseline", "features", "train", "runs", "check",
+        "summary", "baseline", "features", "train", "tune", "threshold", "final",
+        "runs", "check",
     ]
     for step in steps:
         extra = ["--all"] if step == "train" else []

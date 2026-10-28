@@ -18,6 +18,7 @@ import argparse
 import logging
 import os
 import subprocess
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -61,15 +62,20 @@ def log_sklearn_model(model: Any, **kwargs: Any) -> Any:
     The model is stored with cloudpickle: newer MLflow versions default to a format (skops)
     that refuses some ordinary scikit-learn pipelines.
     """
-    # MLflow warns about pickle on every save; these are your own models, so hide that warning.
-    logger = logging.getLogger("mlflow.sklearn")
-    level = logger.level
-    logger.setLevel(logging.ERROR)
+    # MLflow prints warnings on every save that are not about your project (pickle safety for
+    # your own models, integer columns in the input example, the pip version): hide them.
+    loggers = [logging.getLogger(name) for name in ("mlflow.sklearn", "mlflow.utils.environment")]
+    levels = [logger.level for logger in loggers]
+    for logger in loggers:
+        logger.setLevel(logging.ERROR)
     try:
-        return mlflow.sklearn.log_model(model, name="model", serialization_format="cloudpickle",
-                                        **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=UserWarning, module="mlflow")
+            return mlflow.sklearn.log_model(model, name="model",
+                                            serialization_format="cloudpickle", **kwargs)
     finally:
-        logger.setLevel(level)
+        for logger, level in zip(loggers, levels, strict=True):
+            logger.setLevel(level)
 
 
 # PROVIDED

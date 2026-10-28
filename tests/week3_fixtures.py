@@ -47,7 +47,10 @@ def make_feature_table(n: int = 400, n_pos: int = 60, seed: int = 0) -> pd.DataF
 
 # DO NOT EDIT
 def make_week3_project(root: Path, n: int = 400) -> dict[str, Any]:
-    """A temporary project: a feature table, a split, and a small, fast Week 3 config."""
+    """A temporary project: a feature table, a split, and a small, fast Week 3 config.
+
+    It has its own MLflow and Optuna databases, so the tests never touch your real runs.
+    """
     config_path = write_config(root, sample_size=n)
     shutil.copy(REPO_ROOT / "config" / "features.yaml", root / "config" / "features.yaml")
     with (REPO_ROOT / "config" / "models.yaml").open() as f:
@@ -58,6 +61,11 @@ def make_week3_project(root: Path, n: int = 400) -> dict[str, Any]:
         "tree_grid": {"max_depth": [2, 4], "min_samples_leaf": [5, 40]},
     })
     (root / "config" / "models.yaml").write_text(yaml.safe_dump(models, sort_keys=False))
+    with (REPO_ROOT / "config" / "final.yaml").open() as f:
+        final = yaml.safe_load(f)
+    final["optuna"].update({"study": "test-study", "trials_per_run": 2})
+    final["model"]["params"] = {"max_iter": 30}
+    (root / "config" / "final.yaml").write_text(yaml.safe_dump(final, sort_keys=False))
     config = load_week3_config(config_path)
 
     table = make_feature_table(n)

@@ -41,15 +41,50 @@ runs:
 
   # Carry-over: hgb_default has train AUC 1.000, so each of these tries one way to make it
   # memorize less.
+  # Variation 3: Lower learning rate
   hgb_lr005:
     model: hist_gradient_boosting
-    params: {learning_rate: 0.05}     # half the default 0.1: each tree corrects less
+    params:
+      learning_rate: 0.05
+
+  # Variation 4: Fewer leaf nodes
   hgb_leaves15:
     model: hist_gradient_boosting
-    params: {max_leaf_nodes: 15}      # smaller trees than the default 31 leaves
+    params:
+      max_leaf_nodes: 15
+
+  # Variation 5: More samples required per leaf
   hgb_minleaf100:
     model: hist_gradient_boosting
-    params: {min_samples_leaf: 100}   # every leaf describes at least 100 applicants (default 20)
+    params:
+      min_samples_leaf: 100
+
+  # Variation 6: Early stopping
   hgb_early_stop:
     model: hist_gradient_boosting
-    params: {early_stopping: true}    # stop adding trees once a held-out 10% of the train rows stops improving
+    params:
+      early_stopping: true
+
+  # Variation 7: Fewer boosting iterations
+  hgb_iter100:
+    model: hist_gradient_boosting
+    params:
+      max_iter: 100
+
+  # Variation 8: Shallower trees
+  hgb_depth3:
+    model: hist_gradient_boosting
+    params:
+      max_depth: 3
+
+  # Variation 9: Stronger regularization
+  hgb_l2strong:
+    model: hist_gradient_boosting
+    params:
+      l2_regularization: 10.0
+
+  # Variation 10: More boosting iterations
+  hgb_iter300:
+    model: hist_gradient_boosting
+    params:
+      max_iter: 300

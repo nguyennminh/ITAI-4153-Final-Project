@@ -60,6 +60,29 @@ def suggest_params(trial: optuna.Trial) -> dict[str, Any]:
           spend most trials above 0.1.
         - Using another library (LightGBM, XGBoost)? Suggest its own parameter names instead.
     """
+    params = {
+        "learning_rate": trial.suggest_float(
+            "learning_rate", 0.01, 0.3, log=True
+        ),
+        "max_iter": trial.suggest_int(
+            "max_iter", 100, 500, step=50
+        ),
+        "max_leaf_nodes": trial.suggest_int(
+            "max_leaf_nodes", 4, 32
+        ),
+        "min_samples_leaf": trial.suggest_int(
+            "min_samples_leaf", 20, 200
+        ),
+        "l2_regularization": trial.suggest_float(
+            "l2_regularization", 0.001, 10, log=True
+        ),
+        "max_features": trial.suggest_float(
+            "max_features", 0.3, 1.0
+        ),
+    }
+
+    return params
+
     raise NotImplementedError("TODO(student): suggest the boosting settings")
 
 
@@ -92,7 +115,55 @@ def objective(trial: optuna.Trial, data: TrainingData, config: dict[str, Any]) -
         - Study name: ``config["week3"]["final"]["optuna"]["study"]``.
         - Tags: ``{**run_tags(...), "optuna_study": study_name}``.
         - ``mlflow.log_params(params)`` and ``mlflow.log_metrics({...})``.
-    """
+    """    
+    
+    params = suggest_params(trial)
+
+    model_config = config["week3"]["final"]["model"]
+    spec = {
+        "model": model_config["model"],
+        "params": params,
+    }
+
+    model = make_model(
+        spec,
+        data.numeric,
+        data.categorical,
+        config,
+    )
+
+    folds = config["week3"].get("cv_folds", config.get("cv_folds", 5))
+    seed = config["seed"]
+
+    fold_scores = cross_validate_auc(
+        model,
+        data.X_train,
+        data.y_train,
+        n_folds=folds,
+        seed=seed,
+    )
+
+    cv_auc_mean = float(fold_scores["mean"])
+    cv_auc_std = float(fold_scores["std"])
+
+    study_name = config["week3"]["final"]["optuna"]["study"]
+
+    with mlflow.start_run(
+        run_name=f"trial_{trial.number:03d}",
+        nested=True,
+        tags={
+            **run_tags(config, data.data_version, describe_spec(spec)),
+            "optuna_study": study_name,
+        },
+    ):
+        mlflow.log_params(params)
+        mlflow.log_metrics({
+            "cv_auc_mean": cv_auc_mean,
+            "cv_auc_std": cv_auc_std,
+        })
+
+    return float(cv_auc_mean)
+
     raise NotImplementedError("TODO(student): CV-score the trial's settings and log them")
 
 

@@ -61,6 +61,22 @@ def expected_cost(
         - ``y = np.asarray(y_true)``, ``reject = np.asarray(scores) >= threshold``.
         - Approved defaulters: ``(y == 1) & ~reject``. Rejected good: ``(y == 0) & reject``.
     """
+
+    y = np.asarray(y_true)
+    scores = np.asarray(scores)
+
+    reject = scores >= threshold
+
+    approved_defaulters = (y == 1) & ~reject
+    rejected_good = (y == 0) & reject
+
+    total_cost = (
+        np.sum(approved_defaulters) * costs["approve_defaulter"]
+        + np.sum(rejected_good) * costs["reject_good"]
+    )
+
+    return float(total_cost / len(y))
+
     raise NotImplementedError("TODO(student): the expected cost per applicant")
 
 
@@ -75,6 +91,37 @@ def cost_curve(
         ``reject_rate`` (share of applicants rejected), ``approved_defaulters`` and
         ``rejected_good`` (counts).
     """
+
+    y = np.asarray(y_true)
+    scores = np.asarray(scores)
+
+    rows = []
+
+    for threshold in thresholds:
+        reject = scores >= threshold
+
+        approved_defaulters = int(np.sum((y == 1) & ~reject))
+        rejected_good = int(np.sum((y == 0) & reject))
+
+        rows.append({
+            "threshold": float(threshold),
+            "expected_cost": expected_cost(y, scores, threshold, costs),
+            "reject_rate": float(np.mean(reject)),
+            "approved_defaulters": approved_defaulters,
+            "rejected_good": rejected_good,
+        })
+
+    return pd.DataFrame(
+        rows,
+        columns=[
+            "threshold",
+            "expected_cost",
+            "reject_rate",
+            "approved_defaulters",
+            "rejected_good",
+        ],
+    )
+
     raise NotImplementedError("TODO(student): one row per threshold")
 
 
@@ -91,6 +138,15 @@ def choose_threshold(curve: pd.DataFrame) -> float:
     Returns:
         The chosen threshold, as a plain float.
     """
+
+    min_cost = curve["expected_cost"].min()
+
+    best_thresholds = curve.loc[
+        curve["expected_cost"] == min_cost, "threshold"
+    ]
+
+    return float(best_thresholds.max())
+
     raise NotImplementedError("TODO(student): the cheapest threshold")
 
 

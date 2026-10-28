@@ -115,8 +115,8 @@ def objective(trial: optuna.Trial, data: TrainingData, config: dict[str, Any]) -
         - Study name: ``config["week3"]["final"]["optuna"]["study"]``.
         - Tags: ``{**run_tags(...), "optuna_study": study_name}``.
         - ``mlflow.log_params(params)`` and ``mlflow.log_metrics({...})``.
-    """    
-    
+    """
+
     params = suggest_params(trial)
 
     model_config = config["week3"]["final"]["model"]

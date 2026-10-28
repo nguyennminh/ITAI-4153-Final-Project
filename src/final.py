@@ -81,6 +81,30 @@ def register_model(
     Returns:
         ``{"name": ..., "version": <str>, "alias": ..., "uri": "models:/<name>@<alias>"}``.
     """
+
+    registry = config["week3"]["final"]["registry"]
+    name = registry["name"]
+    alias = registry["alias"]
+
+    info = log_sklearn_model(
+        model,
+        registered_model_name=name,
+        input_example=X_example,
+    )
+
+    version = str(info.registered_model_version)
+
+    client = MlflowClient()
+    client.set_registered_model_alias(name, alias, version)
+    client.set_model_version_tag(name, version, "threshold", str(threshold))
+
+    return {
+        "name": name,
+        "version": version,
+        "alias": alias,
+        "uri": f"models:/{name}@{alias}",
+    }
+
     raise NotImplementedError("TODO(student): register the model and set its alias")
 
 

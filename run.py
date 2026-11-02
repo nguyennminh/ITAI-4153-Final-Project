@@ -16,9 +16,11 @@ Usage (from the repository root):
     python run.py tune         add Optuna trials to the tuning study (--trials N)
     python run.py threshold    choose the decision threshold from the costs
     python run.py final        calibrate, check, and register the final model
-    python run.py test         run the tests
+    python run.py test         run the tests (or one kind: tests/unit, tests/data, tests/model)
+    python run.py testreport   run unit, data, and model tests; write reports/test_report.*
     python run.py lint         check code style
-    python run.py check        run the Week 3 checks (--stage mon / --stage wed: one checkpoint)
+    python run.py check        run the Week 4 checks (--stage mon: only the Monday checkpoint)
+    python run.py check3       run the Week 3 checks
     python run.py check2       run the Week 2 checks
     python run.py check1       run the Week 1 checks
     python run.py all          sample (if missing), summary, baseline, features, train --all,
@@ -59,9 +61,11 @@ COMMANDS = {
     "tune": "add Optuna trials to the tuning study (--trials N)",
     "threshold": "choose the decision threshold from the costs",
     "final": "calibrate, check, and register the final model",
-    "test": "run the tests",
+    "test": "run the tests (add tests/unit, tests/data or tests/model for one kind)",
+    "testreport": "run unit, data, and model tests; write reports/test_report.*",
     "lint": "check code style",
-    "check": "run the Week 3 checks (--stage mon, --stage wed)",
+    "check": "run the Week 4 checks (--stage mon)",
+    "check3": "run the Week 3 checks",
     "check2": "run the Week 2 checks",
     "check1": "run the Week 1 checks",
     "all": "sample (if missing) ... train --all, tune, threshold, final, runs, check",
@@ -80,8 +84,10 @@ MODULES = {
     "threshold": ["-m", "src.cost"],
     "final": ["-m", "src.final"],
     "test": ["-m", "pytest"],
+    "testreport": ["-m", "scripts.test_report"],
     "lint": ["-m", "ruff", "check", "."],
-    "check": ["-m", "scripts.check_week3"],
+    "check": ["-m", "scripts.check_week4"],
+    "check3": ["-m", "scripts.check_week3"],
     "check2": ["-m", "scripts.check_week2"],
     "check1": ["-m", "scripts.check_week1"],
 }

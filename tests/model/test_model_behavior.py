@@ -49,7 +49,25 @@ def test_application_weekday_does_not_change_the_score(production: ProductionMod
         - ``np.abs(score(model, changed) - score(model, X)).max()``.
         - Put the size of the largest change in the assert message.
     """
-    pytest.fail("TODO(student): write this test")
+
+    model = production.model
+    X = production.data.X_valid
+
+    original_scores = score(model, X)
+
+    changed = X.copy()
+    changed["WEEKDAY_APPR_PROCESS_START"] = "MONDAY"
+
+    changed_scores = score(model, changed)
+
+    largest_change = np.abs(changed_scores - original_scores).max()
+
+    assert largest_change <= TOLERANCE, (
+        f"Changing application weekday changed scores by up to "
+        f"{largest_change:.6f}"
+    )
+
+    #pytest.fail("TODO(student): write this test")
 
 
 # TODO(student)
@@ -60,7 +78,26 @@ def test_gender_does_not_change_the_score(production: ProductionModel) -> None:
     not change a decision. Score every validation applicant as "F" and again as "M", and
     check that no score differs by more than 0.01.
     """
-    pytest.fail("TODO(student): write this test")
+
+    model = production.model
+    X = production.data.X_valid
+
+    female = X.copy()
+    male = X.copy()
+
+    female["CODE_GENDER"] = "F"
+    male["CODE_GENDER"] = "M"
+
+    female_scores = score(model, female)
+    male_scores = score(model, male)
+
+    largest_change = np.abs(female_scores - male_scores).max()
+
+    assert largest_change <= 0.01, (
+        f"Changing gender changed scores by up to {largest_change:.6f}"
+    )
+
+    #pytest.fail("TODO(student): write this test")
 
 
 # TODO(student)
@@ -75,4 +112,21 @@ def test_higher_income_does_not_raise_risk(production: ProductionModel) -> None:
         - ``increase = score(model, change_income(X, 1.5)) - score(model, X)``.
         - Report how many applicants got riskier, and the largest increase, in the message.
     """
-    pytest.fail("TODO(student): write this test")
+
+    model = production.model
+    X = production.data.X_valid
+
+    original_scores = score(model, X)
+    increased_scores = score(model, change_income(X, 1.5))
+
+    increase = increased_scores - original_scores
+
+    riskier_count = int((increase > TOLERANCE).sum())
+    largest_increase = float(increase.max())
+
+    assert largest_increase <= TOLERANCE, (
+        f"{riskier_count} applicants became riskier; "
+        f"largest score increase was {largest_increase:.6f}"
+    )
+
+    #pytest.fail("TODO(student): write this test")

@@ -1,0 +1,98 @@
+{
+  "created": "2026-11-02T20:02:04+00:00",
+  "git_commit": "b1a100c-dirty",
+  "categories": {
+    "unit": {
+      "counts": {
+        "passed": 5
+      },
+      "tests": [
+        {
+          "name": "test_bureau_features_depend_only_on_own_credits",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_previous_features_ignore_row_order",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_join_keeps_applicants_without_history",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_join_refuses_a_table_that_was_not_aggregated",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_ratios_are_never_infinite",
+          "outcome": "passed",
+          "message": ""
+        }
+      ]
+    },
+    "data": {
+      "counts": {
+        "passed": 5
+      },
+      "tests": [
+        {
+          "name": "test_one_row_per_applicant",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_schema",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_value_ranges",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_missing_values",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_default_rate",
+          "outcome": "passed",
+          "message": ""
+        }
+      ]
+    },
+    "model": {
+      "counts": {
+        "passed": 1,
+        "xfail": 3
+      },
+      "tests": [
+        {
+          "name": "test_minimum_auc",
+          "outcome": "passed",
+          "message": ""
+        },
+        {
+          "name": "test_application_weekday_does_not_change_the_score",
+          "outcome": "xfail",
+          "message": "see docs/test_findings.md"
+        },
+        {
+          "name": "test_gender_does_not_change_the_score",
+          "outcome": "xfail",
+          "message": "see docs/test_findings.md"
+        },
+        {
+          "name": "test_higher_income_does_not_raise_risk",
+          "outcome": "xfail",
+          "message": "see docs/test_findings.md"
+        }
+      ]
+    }
+  }
+}

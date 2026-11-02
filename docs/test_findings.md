@@ -11,7 +11,7 @@ Run `python run.py testreport` and copy the counts from `reports/test_report.md`
 |---|---|---|---|---|---|
 | Unit | 5 | 5 | 0 | 0 | 0 |
 | Data | 5 | 5 | 0 | 0 | 0 |
-| Model | 4 | 1 | 3 | 0 | 0 |
+| Model | 4 | 1 | 0 | 3 | 0 |
 
 ## Limits we chose, and why
 

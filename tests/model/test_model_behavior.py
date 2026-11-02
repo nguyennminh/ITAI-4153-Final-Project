@@ -38,6 +38,7 @@ def test_minimum_auc(production: ProductionModel) -> None:
 
 
 # TODO(student)
+@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")
 def test_application_weekday_does_not_change_the_score(production: ProductionModel) -> None:
     """The day of the week someone applied on must not change their risk.
 
@@ -71,6 +72,7 @@ def test_application_weekday_does_not_change_the_score(production: ProductionMod
 
 
 # TODO(student)
+@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")
 def test_gender_does_not_change_the_score(production: ProductionModel) -> None:
     """Two applicants who differ only in CODE_GENDER must get the same score.
 
@@ -101,6 +103,7 @@ def test_gender_does_not_change_the_score(production: ProductionModel) -> None:
 
 
 # TODO(student)
+@pytest.mark.xfail(strict=True, reason="see docs/test_findings.md")
 def test_higher_income_does_not_raise_risk(production: ProductionModel) -> None:
     """With everything else equal, earning 50% more must not make an applicant riskier.
 

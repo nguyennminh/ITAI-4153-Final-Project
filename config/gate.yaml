@@ -1,12 +1,10 @@
 # The quality gate's thresholds (scripts/quality_gate.py reads them).
-# TODO(student): replace every null with your number, and justify each one in
-# docs/ci_report.md. The gate refuses to pass while a threshold is null.
 
-min_auc: null            # validation ROC-AUC must be at least this (a floor every
+min_auc: 0.70            # validation ROC-AUC must be at least this (a floor every
                          # reasonable model clears)
-max_cost: null           # expected cost per applicant at your threshold must be at most
+max_cost: 0.60           # expected cost per applicant at your threshold must be at most
                          # this (approving everyone costs about 0.81)
-max_auc_drop: null       # the AUC may not fall more than this below your REGISTERED model
+max_auc_drop: 0.01       # the AUC may not fall more than this below your REGISTERED model
                          # (reports/final_model.json), so a change cannot make it worse
 allow_failing_model_tests: 0   # model tests that FAIL (known failures marked xfail do not
                                # count); 0 means every model test must pass or be documented

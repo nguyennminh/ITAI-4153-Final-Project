@@ -18,8 +18,11 @@ Usage (from the repository root):
     python run.py final        calibrate, check, and register the final model
     python run.py test         run the tests (or one kind: tests/unit, tests/data, tests/model)
     python run.py testreport   run unit, data, and model tests; write reports/test_report.*
+    python run.py evaluate     measure the model this commit would ship -> reports/gate_metrics.json
+    python run.py gate         run the quality gate (as Cloud Build does)
+    python run.py ci           run lint, tests, and the gate in order, like Cloud Build
     python run.py lint         check code style
-    python run.py check        run the Week 4 checks (--stage mon: only the Monday checkpoint)
+    python run.py check        run the Week 4 checks (--stage mon / --stage wed: one checkpoint)
     python run.py check3       run the Week 3 checks
     python run.py check2       run the Week 2 checks
     python run.py check1       run the Week 1 checks
@@ -63,8 +66,11 @@ COMMANDS = {
     "final": "calibrate, check, and register the final model",
     "test": "run the tests (add tests/unit, tests/data or tests/model for one kind)",
     "testreport": "run unit, data, and model tests; write reports/test_report.*",
+    "evaluate": "measure the model this commit would ship -> reports/gate_metrics.json",
+    "gate": "run the quality gate (as Cloud Build does)",
+    "ci": "run lint, tests, and the gate in order, like Cloud Build",
     "lint": "check code style",
-    "check": "run the Week 4 checks (--stage mon)",
+    "check": "run the Week 4 checks (--stage mon, --stage wed)",
     "check3": "run the Week 3 checks",
     "check2": "run the Week 2 checks",
     "check1": "run the Week 1 checks",
@@ -85,6 +91,8 @@ MODULES = {
     "final": ["-m", "src.final"],
     "test": ["-m", "pytest"],
     "testreport": ["-m", "scripts.test_report"],
+    "evaluate": ["-m", "src.evaluate"],
+    "gate": ["-m", "scripts.quality_gate"],
     "lint": ["-m", "ruff", "check", "."],
     "check": ["-m", "scripts.check_week4"],
     "check3": ["-m", "scripts.check_week3"],
@@ -141,6 +149,19 @@ def run_all() -> int:
 
 
 # PROVIDED
+def run_ci() -> int:
+    """The same checks as cloudbuild.yaml, in the same order, stopping at the first failure."""
+    for step, args in (("lint", MODULES["lint"]), ("test", ["-m", "pytest", "-q"]),
+                       ("gate", MODULES["gate"])):
+        code = run([python(), *args])
+        if code != 0:
+            print(f"\nCI would be RED: '{step}' failed.")
+            return code
+    print("\nCI would be GREEN.")
+    return 0
+
+
+# PROVIDED
 def usage() -> None:
     """List the commands."""
     print("Usage: python run.py <command> [options]\n")
@@ -159,6 +180,8 @@ def main() -> None:
         sys.exit(setup())
     if command == "all":
         sys.exit(run_all())
+    if command == "ci":
+        sys.exit(run_ci())
     sys.exit(run([python(), *MODULES[command], *extra]))
 
 

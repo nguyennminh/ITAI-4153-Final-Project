@@ -1,0 +1,34 @@
+# Cloud Build: the checks that run on every pull request.
+#
+# Cloud Build starts a fresh machine, copies your repository into /workspace (no data, no
+# mlflow.db: only what is in GitHub), and runs the steps below in order. Every step is a
+# command in a container; if any command exits with a non-zero code, the build stops and is
+# RED, and branch protection blocks the merge.
+#
+# All steps use the same Python image, and /workspace is shared between steps, so the
+# virtual environment the first step creates is there for the later steps.
+
+steps:
+  # PROVIDED: install the project's packages (2-4 minutes, every build).
+  - id: install
+    name: python:3.11-slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        python -m venv /workspace/.venv
+        /workspace/.venv/bin/pip install --quiet --upgrade pip
+        /workspace/.venv/bin/pip install --quiet -r requirements.txt
+
+  # TODO(student): a step with id "lint" that runs ruff on the whole repository.
+  #   Same image as above; the command is /workspace/.venv/bin/python -m ruff check .
+
+  # TODO(student): a step with id "test" that runs pytest. Data and model tests skip
+  #   themselves here (no data); everything else must pass.
+
+  # TODO(student): a step with id "gate" that runs scripts/quality_gate.py
+  #   (/workspace/.venv/bin/python -m scripts.quality_gate).
+
+options:
+  logging: CLOUD_LOGGING_ONLY   # send the build log to Cloud Logging (no extra bucket needed)
+timeout: 1200s                  # stop a stuck build after 20 minutes

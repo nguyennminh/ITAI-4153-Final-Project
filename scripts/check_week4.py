@@ -2,10 +2,10 @@
 
 # DO NOT EDIT: the instructor uses this exact script at checkpoints.
 
-Run it with ``python run.py check --stage mon`` (what the Monday checkpoint needs) or
-``python run.py check`` (everything so far). It runs your tests itself, so it always
-reflects the code as it is now. Passing these checks shows your tests exist and run; it does
-not grade how good they are.
+Run it with ``python run.py check --stage mon`` or ``--stage wed`` (what that checkpoint
+needs), or ``python run.py check`` (everything the Week 4 submission needs). It runs your
+tests itself, so it always reflects the code as it is now. Passing these checks shows your
+tests exist and run; it does not grade how good they are.
 """
 
 from __future__ import annotations
@@ -16,12 +16,19 @@ import sys
 from collections.abc import Callable
 from typing import Any
 
+import yaml
+
 from scripts.check_week2 import CheckFailed, check_sample, count_commit_authors
+from scripts.quality_gate import GATE_CONFIG, THRESHOLDS, gate_failures, load_inputs, preconditions
 from scripts.test_report import CATEGORIES, REPORT_JSON, build_report
+from src.evaluate import GATE_METRICS
 from src.experiment import load_week3_config
 from src.utils import DEFAULT_CONFIG
 
 FINDINGS = "docs/test_findings.md"
+CI_REPORT = "docs/ci_report.md"
+CLOUDBUILD = "cloudbuild.yaml"
+STEP_COMMANDS = {"lint": "ruff", "test": "pytest", "gate": "quality_gate"}
 MIN_TESTS = {"unit": 5, "data": 5, "model": 4}
 STUB = "TODO(student)"
 
@@ -124,6 +131,71 @@ def check_report_file(config: dict[str, Any]) -> str:
     return f"{total} tests, commit {report['git_commit']}"
 
 
+# DO NOT EDIT
+def check_cloudbuild(config: dict[str, Any]) -> str:
+    path = config["root"] / CLOUDBUILD
+    if not path.exists():
+        raise CheckFailed(f"{CLOUDBUILD} not found in the repository root")
+    steps = (yaml.safe_load(path.read_text()) or {}).get("steps") or []
+    by_id = {step.get("id"): " ".join([str(step.get("entrypoint", "")),
+                                       *map(str, step.get("args", []))]) for step in steps}
+    ids = list(by_id)
+    missing = [i for i in ("install", *STEP_COMMANDS) if i not in ids]
+    if missing:
+        raise CheckFailed(f"steps missing: {missing} (found {ids})")
+    wrong = [i for i, word in STEP_COMMANDS.items() if word not in by_id[i]]
+    if wrong:
+        raise CheckFailed(f"steps that do not run their tool: {wrong}")
+    order = [ids.index(i) for i in ("install", *STEP_COMMANDS)]
+    if order != sorted(order):
+        raise CheckFailed("steps must run in the order install, lint, test, gate")
+    return " -> ".join(ids)
+
+
+# DO NOT EDIT
+def check_gate_config(config: dict[str, Any]) -> str:
+    path = config["root"] / GATE_CONFIG
+    if not path.exists():
+        raise CheckFailed(f"{GATE_CONFIG} not found")
+    thresholds = yaml.safe_load(path.read_text()) or {}
+    unset = [name for name in THRESHOLDS if thresholds.get(name) is None]
+    if unset:
+        raise CheckFailed(f"thresholds not set: {unset}")
+    return ", ".join(f"{name}={thresholds[name]}" for name in THRESHOLDS)
+
+
+# DO NOT EDIT
+def check_gate(config: dict[str, Any]) -> str:
+    root = config["root"]
+    if not (root / GATE_METRICS).exists():
+        raise CheckFailed("reports/gate_metrics.json not found; python run.py evaluate")
+    metrics, baseline_auc, thresholds = load_inputs(root)
+    problems = preconditions(metrics, thresholds, root)
+    if problems:
+        raise CheckFailed(problems[0])
+    failures = gate_failures(metrics, baseline_auc, thresholds)
+    if failures:
+        raise CheckFailed(f"the gate fails on your own model: {failures[0]}")
+    return (f"passes: AUC {metrics['valid_auc']:.3f} (registered {baseline_auc:.3f}), cost "
+            f"{metrics['cost_at_threshold']:.3f}")
+
+
+# DO NOT EDIT
+def check_ci_report(config: dict[str, Any]) -> str:
+    path = config["root"] / CI_REPORT
+    if not path.exists():
+        raise CheckFailed(f"{CI_REPORT} not found; copy docs/ci_report_template.md")
+    text = path.read_text()
+    if "TODO" in text:
+        raise CheckFailed(f"{CI_REPORT} still contains TODO")
+    unexplained = [name for name in THRESHOLDS if name not in text]
+    if unexplained:
+        raise CheckFailed(f"thresholds not justified in {CI_REPORT}: {unexplained}")
+    if "console.cloud.google.com/cloud-build" not in text:
+        raise CheckFailed(f"{CI_REPORT} needs the link to a Cloud Build run")
+    return f"{len(text.split())} words, every threshold justified"
+
+
 Check = tuple[str, Callable[[dict[str, Any]], str]]
 MONDAY: list[Check] = [
     ("sample", check_sample),
@@ -132,11 +204,18 @@ MONDAY: list[Check] = [
     ("model tests run", check_model_ran),
     ("test findings", check_findings),
 ]
+WEDNESDAY: list[Check] = [
+    ("cloudbuild.yaml", check_cloudbuild),
+    ("gate thresholds", check_gate_config),
+    ("quality gate", check_gate),
+]
 SUBMISSION: list[Check] = MONDAY + [
     ("model decided", check_model_decided),
     ("test report", check_report_file),
+] + WEDNESDAY + [
+    ("ci report", check_ci_report),
 ]
-STAGES = {"mon": MONDAY, "all": SUBMISSION}
+STAGES = {"mon": MONDAY, "wed": WEDNESDAY, "all": SUBMISSION}
 
 
 # DO NOT EDIT
@@ -144,12 +223,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Week 4 checks.")
     parser.add_argument("--config", default=DEFAULT_CONFIG, help="path to config.yaml")
     parser.add_argument("--stage", choices=list(STAGES), default="all",
-                        help="mon: the Monday checkpoint only; all: everything so far")
+                        help="mon / wed: that checkpoint only; all: the full submission")
     args = parser.parse_args()
     config = load_week3_config(args.config)
     checks = STAGES[args.stage]
 
-    print("Running your unit, data, and model tests (about 20 seconds) ...\n", flush=True)
+    if args.stage != "wed":
+        print("Running your unit, data, and model tests (about 20 seconds) ...\n", flush=True)
     failed = 0
     print(f"{'check':<18}{'result':<7}details")
     print("-" * 90)

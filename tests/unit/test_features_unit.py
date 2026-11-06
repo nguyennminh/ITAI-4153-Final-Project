@@ -123,7 +123,7 @@ def test_join_refuses_a_table_that_was_not_aggregated() -> None:
         - ``with pytest.raises(ValueError):`` around ``join_features(app, {"bureau":
           small_bureau()})``.
     """
-    
+
     app = small_application()
     bureau = small_bureau()
 

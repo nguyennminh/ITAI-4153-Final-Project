@@ -20,14 +20,20 @@ steps:
         /workspace/.venv/bin/pip install --quiet --upgrade pip
         /workspace/.venv/bin/pip install --quiet -r requirements.txt
 
-  # TODO(student): a step with id "lint" that runs ruff on the whole repository.
-  #   Same image as above; the command is /workspace/.venv/bin/python -m ruff check .
+  - id: lint
+    name: python:3.11-slim
+    entrypoint: /workspace/.venv/bin/python
+    args: ["-m", "ruff", "check", "."]
 
-  # TODO(student): a step with id "test" that runs pytest. Data and model tests skip
-  #   themselves here (no data); everything else must pass.
+  - id: test
+    name: python:3.11-slim
+    entrypoint: /workspace/.venv/bin/python
+    args: ["-m", "pytest"]
 
-  # TODO(student): a step with id "gate" that runs scripts/quality_gate.py
-  #   (/workspace/.venv/bin/python -m scripts.quality_gate).
+  - id: gate
+    name: python:3.11-slim
+    entrypoint: /workspace/.venv/bin/python
+    args: ["-m", "scripts.quality_gate"]
 
 options:
   logging: CLOUD_LOGGING_ONLY   # send the build log to Cloud Logging (no extra bucket needed)

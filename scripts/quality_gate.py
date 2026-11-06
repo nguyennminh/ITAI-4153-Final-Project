@@ -28,7 +28,6 @@ BASELINE = Path("reports/final_model.json")
 THRESHOLDS = ("min_auc", "max_cost", "max_auc_drop", "allow_failing_model_tests")
 
 
-# TODO(student)
 def gate_failures(
     metrics: dict[str, Any], baseline_auc: float, thresholds: dict[str, Any]
 ) -> list[str]:
@@ -55,7 +54,26 @@ def gate_failures(
     Returns:
         The reasons, in the order above. Check every rule: do not stop at the first failure.
     """
-    raise NotImplementedError("TODO(student): one reason per broken rule")
+    failures = []
+    auc = metrics["valid_auc"]
+    cost = metrics["cost_at_threshold"]
+    failed_tests = metrics["model_tests"]["failed"]
+    if auc < thresholds["min_auc"]:
+        failures.append(f"validation AUC {auc:.3f} is below the floor {thresholds['min_auc']:.3f}")
+    if cost > thresholds["max_cost"]:
+        failures.append(f"cost {cost:.3f} is above the limit {thresholds['max_cost']:.3f}")
+    minimum_auc = baseline_auc - thresholds["max_auc_drop"]
+    if auc < minimum_auc:
+        failures.append(
+            f"validation AUC {auc:.3f} is below the baseline limit {minimum_auc:.3f} "
+            f"(registered AUC {baseline_auc:.3f}, maximum drop {thresholds['max_auc_drop']:.3f})"
+        )
+    if failed_tests > thresholds["allow_failing_model_tests"]:
+        failures.append(
+            f"failed model tests {failed_tests} is above the limit "
+            f"{thresholds['allow_failing_model_tests']}"
+        )
+    return failures
 
 
 # PROVIDED

@@ -1,5 +1,5 @@
 {
-  "run_id": "269606b728ff412cb698bc4dd12b5449",
+  "run_id": "47c04896e0d845c29dc15e27ff016349",
   "model": {
     "model": "hist_gradient_boosting",
     "params": {
@@ -210,8 +210,8 @@
       "default_rate": 0.081
     }
   },
-  "latency_p50_ms": 10.302375012543052,
-  "latency_p95_ms": 16.032535443082452,
+  "latency_p50_ms": 7.369104496319778,
+  "latency_p95_ms": 8.446404163260013,
   "model_size_kb": 327.5732421875,
   "compare_to": {
     "run": "tree_tuned",
@@ -228,8 +228,8 @@
     "valid_auc_ci_high": 0.7558285869565218,
     "valid_pr_auc": 0.1589100068049007,
     "valid_ks": 0.33933825011082897,
-    "latency_p50_ms": 3.1120414787437767,
-    "latency_p95_ms": 3.248204811825417,
+    "latency_p50_ms": 2.7904165035579354,
+    "latency_p95_ms": 3.1445562635781243,
     "model_size_kb": 17.69140625,
     "auc_diff": 0.04449952309945049,
     "auc_diff_ci": [

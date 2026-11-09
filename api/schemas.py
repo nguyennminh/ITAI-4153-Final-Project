@@ -32,7 +32,7 @@ class PredictRequest(BaseModel):
           is "forbid"), so a typo like ``AMT_INCOM_TOTAL`` gets a 422 instead of being
           silently ignored.
     """
-    
+
     model_config = ConfigDict(extra="forbid")
 
     SK_ID_CURR: int = Field(gt=0, description="The applicant's id")
@@ -51,7 +51,7 @@ class PredictRequest(BaseModel):
         default=None,
         gt=0,
         description="Updated yearly repayment; uses the stored value if omitted",
-    )    
+    )
 
 
 # PROVIDED

@@ -97,5 +97,3 @@ def build_features(request: PredictRequest, store: pd.DataFrame,
 
     # 4. Return exactly the requested columns in training order.
     return row.loc[:, features]
-
-    # raise NotImplementedError("TODO(student): look up the applicant and apply the overrides")

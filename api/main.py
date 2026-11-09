@@ -77,7 +77,6 @@ def model_info() -> ModelInfo:
         exported=info["exported"],
     )
 
-    # raise NotImplementedError("TODO(student): describe the serving model")
 
 
 # TODO(student)
@@ -123,5 +122,3 @@ def predict(request: PredictRequest) -> PredictResponse:
         threshold=threshold,
         model_version=b.info["version"],
     )
-
-    # raise NotImplementedError("TODO(student): score the applicant and decide")

@@ -23,6 +23,7 @@ Usage (from the repository root):
     python run.py ci           run lint, tests, and the gate in order, like Cloud Build
     python run.py export       write the model bundle to models/ and requirements-api.txt
     python run.py serve        run the API on http://127.0.0.1:8000 (Ctrl+C to stop)
+    python run.py latency      time the API (--url https://...run.app for the live service)
     python run.py lint         check code style
     python run.py check        run the Week 5 checks (--stage mon / --stage wed: one checkpoint)
     python run.py check4       run the Week 4 checks
@@ -74,6 +75,7 @@ COMMANDS = {
     "ci": "run lint, tests, and the gate in order, like Cloud Build",
     "export": "write the model bundle to models/ and requirements-api.txt",
     "serve": "run the API on http://127.0.0.1:8000 (Ctrl+C to stop)",
+    "latency": "time the API (--url https://...run.app for the live service)",
     "lint": "check code style",
     "check": "run the Week 5 checks (--stage mon, --stage wed)",
     "check4": "run the Week 4 checks",
@@ -101,6 +103,7 @@ MODULES = {
     "gate": ["-m", "scripts.quality_gate"],
     "export": ["-m", "src.export_model"],
     "serve": ["-m", "uvicorn", "api.main:app", "--reload", "--port", "8000"],
+    "latency": ["-m", "scripts.measure_latency"],
     "lint": ["-m", "ruff", "check", "."],
     "check": ["-m", "scripts.check_week5"],
     "check4": ["-m", "scripts.check_week4"],

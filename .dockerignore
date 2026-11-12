@@ -1,0 +1,18 @@
+# PROVIDED: what never goes into the Docker image (it would be big, slow, or must stay
+# private). The Kaggle data and the model bundle are NEVER in the image.
+data/
+models/
+mlruns/
+mlflow.db
+optuna.db
+.venv/
+.git/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+notebooks/
+reports/
+tests/
+docs/
+*.zip
+.env

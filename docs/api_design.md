@@ -3,18 +3,12 @@
 
 # API design (Week 5)
 
-Team: TODO
+Team: Group 4 (Krish Iyer, Minh Nguyen, Calvin Zheng)
 
 ## 1. Where do the 164 features come from?
 
 A request to /predict arrives for one applicant. The model needs 164 features, and most of
 them are aggregates over many rows of the six child tables (Week 2).
-
-TODO: Explain the problem in your own words: why can't the caller just send all 164 values?
-Name at least two ways a service could get them, and what each would cost (speed,
-complexity, the risk that training and serving compute features differently).
-
-A request to /predict arrives for one applicant. The model needs 164 features, and most of them are aggregates over many rows of the six child tables (Week 2).
 
 The caller cannot realistically send all 164 features because many of them are calculated from historical information stored across multiple tables, such as previous credit applications, bureau records, payment history, and credit card balances. The caller would need access to all the original data and would have to calculate the features correctly before making the request. This would make the API more complicated and increase the possibility of incorrect or missing values.
 
@@ -23,10 +17,6 @@ There are two main ways the service could obtain these features. The first optio
 The second option is to precompute the features and store them in a feature store. This would allow the service to retrieve an applicant's features using their unique SK_ID_CURR identifier. This approach is much faster because the features have already been calculated. It also reduces the possibility of training and serving using different feature calculations, provided both use the same feature engineering pipeline.
 
 ## 2. What we chose, and why
-
-TODO: How our service gets them (the feature store, keyed by SK_ID_CURR), what the request
-contains, and why that is the right choice for this project. What happens when the request
-updates an amount (the ratios)?
 
 Our project uses a precomputed feature store, which contains one row per applicant and is keyed by SK_ID_CURR. The feature store is saved as models/feature_store.parquet and is generated using the same Week 2 feature engineering pipeline and cleaning process used when training the model.
 
@@ -48,10 +38,6 @@ We chose this approach because it provides faster predictions, avoids repeatedly
 
 ## 3. What can go wrong
 
-TODO: At least two, with what the service does: an applicant who is not in the feature store;
-a feature store built from different data or code than the model; an applicant whose history
-changed after the store was built.
-
 There are several potential problems that could affect the accuracy and reliability of the API.
 
 1. Applicant is not in the feature store
@@ -68,10 +54,8 @@ An applicant's financial information or payment history might change after the f
 
 ## 4. Example requests
 
-TODO: Paste one valid request and its answer, one invalid request and its 422, and one unknown
-applicant and its 404 (from http://127.0.0.1:8000/docs or curl).
-
-The following examples demonstrate the three possible outcomes when making a request to the /predict endpoint.
+The following examples demonstrate the three possible outcomes when making a request to the /predict endpoint. These are real answers from our exported model (version 1, threshold 0.08), taken with the
+service running on a laptop. Applicant 100021 is the first id in the feature store.
 
 Example 1: Valid request (HTTP 200)
 
@@ -79,23 +63,23 @@ A valid request includes an applicant ID that exists in the feature store. Updat
 
 Request:
 
-{
-  "SK_ID_CURR": 100011
-}
+```json
+{"SK_ID_CURR": 100021}
+```
 
-Example response:
+Response:
 
+```json
 {
-  "SK_ID_CURR": 100011,
-  "probability": 0.07,
-  "decision": "approve",
-  "threshold": 0.12,
+  "SK_ID_CURR": 100021,
+  "probability": 0.1282051282051282,
+  "decision": "reject",
+  "threshold": 0.08,
   "model_version": "1"
 }
+```
 
-The response includes the applicant's predicted probability of default, the resulting credit decision, the decision threshold, and the model version used to generate the prediction.
-
-Note: The response values above illustrate the response format. Replace the applicant ID and response with the actual output from your exported model when running the API locally.
+The probability of default, 0.128, is at least the threshold of 0.08, so the decision is reject.
 
 Example 2: Invalid request (HTTP 422)
 
@@ -103,29 +87,25 @@ A request containing an invalid amount, such as negative yearly income, is rejec
 
 Request:
 
-{
-  "SK_ID_CURR": 100011,
-  "AMT_INCOME_TOTAL": -1000
-}
+```json
+{"SK_ID_CURR": 100021, "AMT_INCOME_TOTAL": -1000}
+```
 
-Example response:
+Response:
 
+```json
 {
   "detail": [
     {
       "type": "greater_than",
-      "loc": [
-        "body",
-        "AMT_INCOME_TOTAL"
-      ],
+      "loc": ["body", "AMT_INCOME_TOTAL"],
       "msg": "Input should be greater than 0",
       "input": -1000,
-      "ctx": {
-        "gt": 0
-      }
+      "ctx": {"gt": 0.0}
     }
   ]
 }
+```
 
 The HTTP 422 response indicates that the request failed validation because the income amount must be greater than zero.
 
@@ -135,14 +115,14 @@ A request can have valid formatting but still fail if the applicant does not exi
 
 Request:
 
-{
-  "SK_ID_CURR": 1
-}
+```json
+{"SK_ID_CURR": 1}
+```
 
-Example response:
+Response:
 
-{
-  "detail": "Applicant with SK_ID_CURR 1 was not found."
-}
+```json
+{"detail": "Applicant with SK_ID_CURR 1 was not found."}
+```
 
 The HTTP 404 response indicates that the applicant could not be found in the feature store. Unlike the 422 response, this request passed input validation but could not be processed because the requested applicant does not exist.

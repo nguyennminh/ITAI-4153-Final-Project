@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
-import numpy as np  # noqa: F401  (for you to use)
+import numpy as np
 import pandas as pd
 
 STORE = Path("models/feature_store.parquet")
@@ -40,7 +40,11 @@ def summarize(times_ms: list[float]) -> dict[str, float]:
         - ``np.percentile(times_ms, [50, 95])``.
         - An empty list is a mistake by the caller: raise a ValueError.
     """
-    raise NotImplementedError("TODO(student): p50, p95, max, mean")
+    if not times_ms:
+        raise ValueError("no response times to summarize")
+    p50, p95 = np.percentile(times_ms, [50, 95])
+    return {"n": len(times_ms), "p50_ms": float(p50), "p95_ms": float(p95),
+            "max_ms": float(max(times_ms)), "mean_ms": float(np.mean(times_ms))}
 
 
 # PROVIDED

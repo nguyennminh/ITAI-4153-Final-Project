@@ -4,7 +4,7 @@
 #
 # PROVIDED: a slim base image. Use the SAME Python minor version as the laptop that exported
 # the model (the second line of requirements-api.txt says which), so the saved model loads.
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -15,6 +15,8 @@ WORKDIR /app
 #   Copy requirements-api.txt into the image, then
 #   RUN pip install --no-cache-dir -r requirements-api.txt
 #   (Copying it BEFORE the code lets Docker reuse this slow step when only the code changes.)
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
 
 # PROVIDED: only the service's code goes into the image. No data, no model (the service
 # downloads it from your bucket when it starts), no tests, no notebooks.
@@ -24,7 +26,10 @@ COPY api/ api/
 #   RUN useradd --create-home appuser
 #   USER appuser
 #   (If someone breaks into the service, they should not be root inside the container.)
+RUN useradd --create-home appuser
+USER appuser
 
 # TODO(student): start the service: uvicorn serving api.main:app on host 0.0.0.0 and port
 #   $PORT (Cloud Run tells the container which port to use through PORT).
 #   CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT}"]

@@ -7,11 +7,11 @@ Team: Group 4 (Krish Iyer, Minh Nguyen, Calvin Zheng)
 
 | | |
 |---|---|
-| Service URL | TODO (the Service URL printed at the end of `gcloud run deploy`) |
+| Service URL | https://credit-risk-api-196591733163.us-central1.run.app |
 | Project id / region | credit-risk-group4-513720 / us-central1 |
-| Image | TODO (us-central1-docker.pkg.dev/credit-risk-group4-513720/credit-risk/api:v1, confirm after the push) |
-| Model bucket | TODO (gs://credit-risk-models-credit-risk-group4-513720 unless the name was taken; private) |
-| Model version served | 1 (`credit-risk@staging`; confirm with /model-info on the live service) |
+| Image | us-central1-docker.pkg.dev/credit-risk-group4-513720/credit-risk/api:v1 |
+| Model bucket | gs://credit-risk-models-credit-risk-group4-513720 (private) |
+| Model version served | 1 (`credit-risk@staging`; /model-info on the live service reports version 1) |
 | Instances | min 0, max 2 |
 | Memory / CPU | 1 GiB / 1 CPU |
 | Service account | credit-risk-api@credit-risk-group4-513720.iam.gserviceaccount.com; role: Storage Object Viewer on the model bucket only |

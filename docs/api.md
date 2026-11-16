@@ -5,14 +5,18 @@
 
 Team: Group 4 (Krish Iyer, Minh Nguyen, Calvin Zheng)
 
-Base URL: TODO (https://...run.app, the service URL in docs/deployment.md). Interactive
-documentation: `<base URL>/docs`.
+Base URL: https://credit-risk-api-196591733163.us-central1.run.app (also in
+docs/deployment.md). Interactive documentation:
+https://credit-risk-api-196591733163.us-central1.run.app/docs.
 
 The service gives a loan decision for one applicant of our Home Credit sample. It looks up
 the applicant's 164 features in the feature store, scores them with our registered model
 (`credit-risk@staging`, version 1), and rejects the application when the probability of
-default is at least 0.08. The examples below were taken from the same model running on a
-laptop; set `URL` to the base URL first.
+default is at least 0.08. The answers below come from the live service. Set `URL` first:
+
+```bash
+URL=https://credit-risk-api-196591733163.us-central1.run.app
+```
 
 ## Endpoints
 
@@ -46,11 +50,11 @@ curl -s $URL/model-info
   "n_features": 164,
   "valid_auc": 0.7471218044304732,
   "data_version": "9fb9955ad0ed",
-  "exported": "2026-11-12T23:28:01+00:00"
+  "exported": "2026-11-12T20:23:52+00:00"
 }
 ```
 
-(`exported` shows when the bundle was exported, so the live service shows its own date.)
+(`exported` is when the bundle in the bucket was exported.)
 
 ### POST /predict
 

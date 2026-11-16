@@ -110,10 +110,29 @@ curl -s -X POST $URL/predict -H "Content-Type: application/json" -d '{"SK_ID_CUR
 
 ## Response times
 
-TODO: from reports/latency.json after `python run.py latency --url <base URL>` (run it after
-the service has been idle for 20 minutes): the number of requests, p50, p95, the slowest, and
-the first request (cold start), with the date measured. Then say what p50 and p95 mean for
-the person waiting on the loan screen.
+Measured on 2026-11-16 at 17:44 UTC from a laptop in North Carolina with
+`python run.py latency --url <base URL>`, after the service had received no requests for 22
+minutes (reports/latency.json):
+
+| | |
+|---|---|
+| First request (cold start) | 20,308 ms |
+| Requests after it | 100, 0 errors |
+| p50 | 88 ms |
+| p95 | 191 ms |
+| Slowest | 243 ms |
+| Mean | 104 ms |
+
+Once an instance is running, the person on the loan screen typically gets the decision in
+under a tenth of a second (p50), and 19 requests in 20 finish within about 0.2 seconds (p95).
+Both feel instant. These times include the network trip from the laptop to us-central1, not
+only the model. The problem is the first request after a quiet period. With min instances at
+0, Cloud Run has shut the service down, so a new container has to start, download the model
+bundle from the bucket and load it before it can answer. The applicant who triggers that
+waits about 20 seconds, which is long enough to think the page is broken. Setting min
+instances to 1 would remove the wait for the cost of one instance kept running all the time.
+For a class project we keep 0. For a real lender taking applications during the day, 1
+instance during business hours would be worth it.
 
 ## Online or batch scoring?
 

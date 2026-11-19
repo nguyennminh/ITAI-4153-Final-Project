@@ -1,7 +1,7 @@
 # PROVIDED: keep data, secrets, and generated clutter out of git.
 
 # Data: never commit the Kaggle download or the sample built from it
-/data/
+data/
 *.zip
 
 # Secrets
@@ -16,6 +16,10 @@ mlartifacts/
 mlflow.db
 optuna.db
 models/
+
+# Monitoring (Week 6): Evidently's interactive reports are large; they stay on your machine.
+# The prediction logs and production batches are under data/, which is never committed.
+reports/monitoring/evidently/
 
 # Tools
 reports/*.tmp

@@ -24,8 +24,12 @@ Usage (from the repository root):
     python run.py export       write the model bundle to models/ and requirements-api.txt
     python run.py serve        run the API on http://127.0.0.1:8000 (Ctrl+C to stop)
     python run.py latency      time the API (--url https://...run.app for the live service)
+    python run.py pool         build the simulated production batches -> data/production/
+    python run.py send         send a production batch to the service (--batch N --url URL)
+    python run.py monitor      drift report from the prediction log -> reports/monitoring/
     python run.py lint         check code style
-    python run.py check        run the Week 5 checks (--stage mon / --stage wed: one checkpoint)
+    python run.py check        run the Week 6 checks (--stage mon / --stage wed: one checkpoint)
+    python run.py check5       run the Week 5 checks
     python run.py check4       run the Week 4 checks
     python run.py check3       run the Week 3 checks
     python run.py check2       run the Week 2 checks
@@ -36,6 +40,8 @@ Usage (from the repository root):
 Options for ``sample``: ``--force`` rebuilds an existing sample, and ``--raw-dir PATH`` uses
 a full download in another folder instead of data/raw.
 Options for ``features``: ``--sample-dir PATH`` reads the tables from another folder.
+Options for ``pool``: ``--raw-dir PATH`` uses a full download in another folder.
+Options for ``monitor``: ``--logs PATH`` (default data/logs/predictions.json).
 Options for ``train``: run names from config/models.yaml, ``tree_tuned``, or ``--all``.
 
 Each command runs the plain ``python -m ...`` command printed before it, so you can always
@@ -76,8 +82,12 @@ COMMANDS = {
     "export": "write the model bundle to models/ and requirements-api.txt",
     "serve": "run the API on http://127.0.0.1:8000 (Ctrl+C to stop)",
     "latency": "time the API (--url https://...run.app for the live service)",
+    "pool": "build the simulated production batches -> data/production/ (--raw-dir PATH)",
+    "send": "send a production batch to the service (--batch N --url URL)",
+    "monitor": "drift report from the prediction log -> reports/monitoring/ (--logs PATH)",
     "lint": "check code style",
-    "check": "run the Week 5 checks (--stage mon, --stage wed)",
+    "check": "run the Week 6 checks (--stage mon, --stage wed)",
+    "check5": "run the Week 5 checks",
     "check4": "run the Week 4 checks",
     "check3": "run the Week 3 checks",
     "check2": "run the Week 2 checks",
@@ -104,8 +114,12 @@ MODULES = {
     "export": ["-m", "src.export_model"],
     "serve": ["-m", "uvicorn", "api.main:app", "--reload", "--port", "8000"],
     "latency": ["-m", "scripts.measure_latency"],
+    "pool": ["-m", "src.production_pool"],
+    "send": ["-m", "scripts.send_batch"],
+    "monitor": ["-m", "src.monitoring"],
     "lint": ["-m", "ruff", "check", "."],
-    "check": ["-m", "scripts.check_week5"],
+    "check": ["-m", "scripts.check_week6"],
+    "check5": ["-m", "scripts.check_week5"],
     "check4": ["-m", "scripts.check_week4"],
     "check3": ["-m", "scripts.check_week3"],
     "check2": ["-m", "scripts.check_week2"],

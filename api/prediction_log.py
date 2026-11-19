@@ -18,6 +18,7 @@ their answer, and a warning goes to the error log instead.
 
 from __future__ import annotations
 
+
 import json
 import math
 import os
@@ -46,7 +47,6 @@ def json_safe(value: Any) -> Any:
     return value
 
 
-# TODO(student)
 def build_record(request: PredictRequest, row: pd.DataFrame,
                  response: PredictResponse) -> dict[str, Any]:
     """The log record for one answered request.
@@ -75,7 +75,25 @@ def build_record(request: PredictRequest, row: pd.DataFrame,
         - ``row.iloc[0].to_dict()`` is {column: value} for the one row.
         - ``getattr(request, name)`` reads a request field by its name.
     """
-    raise NotImplementedError("TODO(student): build the prediction log record")
+    return {
+        "event": EVENT,
+        "severity": "INFO",
+        "request_id": uuid.uuid4().hex,
+        "timestamp": datetime.now(UTC).isoformat(),
+        "model_version": response.model_version,
+        "SK_ID_CURR": response.SK_ID_CURR,
+        "overrides": {
+            name: value
+            for name in OVERRIDABLE
+            if (value := getattr(request, name)) is not None
+        },
+        "features": {
+            name: json_safe(value) for name, value in row.iloc[0].to_dict().items()
+        },
+        "probability": response.probability,
+        "decision": response.decision,
+        "threshold": response.threshold,
+    }
 
 
 # PROVIDED

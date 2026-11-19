@@ -1,5 +1,5 @@
 # Written by python run.py export: the exact versions the model was saved with.
-# Python 3.13.11 (use the same minor version in the Dockerfile's FROM line).
+# Python 3.12.3 (use the same minor version in the Dockerfile's FROM line).
 fastapi==0.162.0
 uvicorn==0.54.0
 pydantic==2.14.1

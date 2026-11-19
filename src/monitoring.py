@@ -80,7 +80,6 @@ def bin_shares(values: pd.Series | np.ndarray, edges: np.ndarray) -> np.ndarray:
     return np.append(counts, missing.sum()) / max(len(x), 1)
 
 
-# TODO(student)
 def psi(reference: pd.Series | np.ndarray, current: pd.Series | np.ndarray, bins: int = 10,
         edges: np.ndarray | None = None) -> float:
     """Population stability index of ``current`` against ``reference``.

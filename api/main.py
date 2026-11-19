@@ -21,6 +21,7 @@ from fastapi import FastAPI, HTTPException  # noqa: F401  (HTTPException is for 
 
 from api.bundle import Bundle, load_bundle
 from api.features import UnknownApplicant, build_features  # noqa: F401
+from api.prediction_log import log_prediction
 from api.schemas import ModelInfo, PredictRequest, PredictResponse  # noqa: F401
 
 STATE: dict[str, Bundle] = {}

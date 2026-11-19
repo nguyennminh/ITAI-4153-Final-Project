@@ -18,6 +18,7 @@ their answer, and a warning goes to the error log instead.
 
 from __future__ import annotations
 
+
 import json
 import math
 import os
@@ -46,7 +47,6 @@ def json_safe(value: Any) -> Any:
     return value
 
 
-# TODO(student)
 def build_record(request: PredictRequest, row: pd.DataFrame,
                  response: PredictResponse) -> dict[str, Any]:
     """The log record for one answered request.

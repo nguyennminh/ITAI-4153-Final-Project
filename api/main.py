@@ -12,6 +12,7 @@ request: loading takes about a second, a prediction a few milliseconds.
 """
 
 from __future__ import annotations
+from api.prediction_log import log_prediction
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -114,11 +115,17 @@ def predict(request: PredictRequest) -> PredictResponse:
     threshold = float(b.info["threshold"])
     decision = "reject" if probability >= threshold else "approve"
 
-    # Return the prediction response.
-    return PredictResponse(
+    # Build the prediction response.
+    response = PredictResponse(
         SK_ID_CURR=request.SK_ID_CURR,
         probability=probability,
         decision=decision,
         threshold=threshold,
         model_version=b.info["version"],
     )
+
+    # Log the prediction.
+    log_prediction(request, row, response)
+
+    # Return the prediction response.
+    return response

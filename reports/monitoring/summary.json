@@ -1,0 +1,262 @@
+{
+  "source": "cloud_logging",
+  "logs_file": "data/logs/predictions.json",
+  "records": 2002,
+  "model_versions": [
+    "1"
+  ],
+  "reference": {
+    "rows": 4000,
+    "what": "X_train, the model's training rows",
+    "valid_approval_rate": 0.749,
+    "valid_mean_score": 0.081
+  },
+  "thresholds": {
+    "psi_moderate": 0.1,
+    "psi_major": 0.25
+  },
+  "batches": {
+    "1": {
+      "requests": 1000,
+      "first": "2026-11-20T00:34:10.327895+00:00",
+      "last": "2026-11-20T00:43:21.610719+00:00",
+      "approval_rate": 0.744,
+      "mean_score": 0.0876,
+      "score_psi": 0.0132,
+      "features_major": 0,
+      "features_moderate": 0,
+      "top": [
+        {
+          "feature": "ORGANIZATION_TYPE",
+          "psi": 0.0856,
+          "ks_stat": NaN,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": NaN,
+          "mean_cur": NaN,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BUILD_AVG",
+          "psi": 0.0432,
+          "ks_stat": 0.0713,
+          "missing_ref": 0.6847,
+          "missing_cur": 0.638,
+          "mean_ref": 0.7493,
+          "mean_cur": 0.749,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BUILD_MEDI",
+          "psi": 0.0418,
+          "ks_stat": 0.0693,
+          "missing_ref": 0.6847,
+          "missing_cur": 0.638,
+          "mean_ref": 0.7526,
+          "mean_cur": 0.7523,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BEGINEXPLUATATION_AVG",
+          "psi": 0.0338,
+          "ks_stat": 0.0659,
+          "missing_ref": 0.506,
+          "missing_cur": 0.482,
+          "mean_ref": 0.9766,
+          "mean_cur": 0.9776,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BUILD_MODE",
+          "psi": 0.0331,
+          "ks_stat": 0.0563,
+          "missing_ref": 0.6847,
+          "missing_cur": 0.638,
+          "mean_ref": 0.7559,
+          "mean_cur": 0.7558,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BEGINEXPLUATATION_MEDI",
+          "psi": 0.0302,
+          "ks_stat": 0.0651,
+          "missing_ref": 0.506,
+          "missing_cur": 0.482,
+          "mean_ref": 0.9767,
+          "mean_cur": 0.9776,
+          "level": "none"
+        },
+        {
+          "feature": "YEARS_BEGINEXPLUATATION_MODE",
+          "psi": 0.0272,
+          "ks_stat": 0.0579,
+          "missing_ref": 0.506,
+          "missing_cur": 0.482,
+          "mean_ref": 0.9762,
+          "mean_cur": 0.9773,
+          "level": "none"
+        },
+        {
+          "feature": "AMT_GOODS_PRICE",
+          "psi": 0.0217,
+          "ks_stat": 0.0436,
+          "missing_ref": 0.0005,
+          "missing_cur": 0.001,
+          "mean_ref": 551157.1681,
+          "mean_cur": 536017.2477,
+          "level": "none"
+        },
+        {
+          "feature": "DAYS_EMPLOYED",
+          "psi": 0.021,
+          "ks_stat": 0.0518,
+          "missing_ref": 0.1795,
+          "missing_cur": 0.167,
+          "mean_ref": -2292.5198,
+          "mean_cur": -2449.2221,
+          "level": "none"
+        },
+        {
+          "feature": "BASEMENTAREA_MODE",
+          "psi": 0.0207,
+          "ks_stat": 0.0322,
+          "missing_ref": 0.6045,
+          "missing_cur": 0.576,
+          "mean_ref": 0.0855,
+          "mean_cur": 0.0874,
+          "level": "none"
+        }
+      ],
+      "evidently": {
+        "html": "/Users/minhnguyen/ITAI-4153-Final-Project/reports/monitoring/evidently/batch1.html",
+        "drifted_columns": 7,
+        "drifted_share": 0.043,
+        "columns": 164
+      }
+    },
+    "2": {
+      "requests": 1000,
+      "first": "2026-11-20T00:43:29.585859+00:00",
+      "last": "2026-11-20T00:44:22.922613+00:00",
+      "approval_rate": 0.701,
+      "mean_score": 0.0899,
+      "score_psi": 0.014,
+      "features_major": 4,
+      "features_moderate": 0,
+      "top": [
+        {
+          "feature": "AMT_INCOME_TOTAL",
+          "psi": 1.0969,
+          "ks_stat": 0.3742,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": 168454.7921,
+          "mean_cur": 116653.4208,
+          "level": "major"
+        },
+        {
+          "feature": "EXT_SOURCE_3",
+          "psi": 0.5345,
+          "ks_stat": 0.0356,
+          "missing_ref": 0.1995,
+          "missing_cur": 0.535,
+          "mean_ref": 0.5113,
+          "mean_cur": 0.5101,
+          "level": "major"
+        },
+        {
+          "feature": "ANNUITY_INCOME_RATIO",
+          "psi": 0.4745,
+          "ks_stat": 0.2902,
+          "missing_ref": 0.0003,
+          "missing_cur": 0.0,
+          "mean_ref": 0.184,
+          "mean_cur": 0.2634,
+          "level": "major"
+        },
+        {
+          "feature": "CREDIT_INCOME_RATIO",
+          "psi": 0.2605,
+          "ks_stat": 0.21,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": 4.0392,
+          "mean_cur": 5.7698,
+          "level": "major"
+        },
+        {
+          "feature": "ORGANIZATION_TYPE",
+          "psi": 0.05,
+          "ks_stat": NaN,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": NaN,
+          "mean_cur": NaN,
+          "level": "none"
+        },
+        {
+          "feature": "OCCUPATION_TYPE",
+          "psi": 0.0358,
+          "ks_stat": NaN,
+          "missing_ref": 0.3215,
+          "missing_cur": 0.32,
+          "mean_ref": NaN,
+          "mean_cur": NaN,
+          "level": "none"
+        },
+        {
+          "feature": "INST_COUNT",
+          "psi": 0.0204,
+          "ks_stat": 0.022,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": 37.1942,
+          "mean_cur": 37.967,
+          "level": "none"
+        },
+        {
+          "feature": "BUREAU_AMT_DEBT_MEAN",
+          "psi": 0.0188,
+          "ks_stat": 0.03,
+          "missing_ref": 0.173,
+          "missing_cur": 0.179,
+          "mean_ref": 169954.2472,
+          "mean_cur": 148861.5893,
+          "level": "none"
+        },
+        {
+          "feature": "EXT_SOURCE_2",
+          "psi": 0.0183,
+          "ks_stat": 0.0424,
+          "missing_ref": 0.0022,
+          "missing_cur": 0.0,
+          "mean_ref": 0.5091,
+          "mean_cur": 0.5018,
+          "level": "none"
+        },
+        {
+          "feature": "PREV_COUNT",
+          "psi": 0.0183,
+          "ks_stat": 0.016,
+          "missing_ref": 0.0,
+          "missing_cur": 0.0,
+          "mean_ref": 4.6448,
+          "mean_cur": 4.652,
+          "level": "none"
+        }
+      ],
+      "evidently": {
+        "html": "/Users/minhnguyen/ITAI-4153-Final-Project/reports/monitoring/evidently/batch2.html",
+        "drifted_columns": 9,
+        "drifted_share": 0.055,
+        "columns": 164
+      }
+    }
+  },
+  "not_compared": {
+    "not_in_a_batch": 1,
+    "batches_with_too_few": {
+      "3": 1
+    }
+  }
+}

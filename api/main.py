@@ -20,6 +20,7 @@ from fastapi import FastAPI, HTTPException  # noqa: F401  (HTTPException is for 
 
 from api.bundle import Bundle, load_bundle
 from api.features import UnknownApplicant, build_features  # noqa: F401
+from api.prediction_log import log_prediction
 from api.schemas import ModelInfo, PredictRequest, PredictResponse  # noqa: F401
 
 STATE: dict[str, Bundle] = {}
@@ -114,11 +115,13 @@ def predict(request: PredictRequest) -> PredictResponse:
     threshold = float(b.info["threshold"])
     decision = "reject" if probability >= threshold else "approve"
 
-    # Return the prediction response.
-    return PredictResponse(
+    response = PredictResponse(
         SK_ID_CURR=request.SK_ID_CURR,
         probability=probability,
         decision=decision,
         threshold=threshold,
         model_version=b.info["version"],
     )
+    log_prediction(request, row, response)
+    return response
+

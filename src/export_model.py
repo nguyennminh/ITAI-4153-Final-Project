@@ -7,8 +7,10 @@ laptop, so this copies everything the service needs into models/ (never committe
 
     models/model.joblib            models:/credit-risk@staging, the registered Week 3 model
     models/model_info.json         its version, threshold, features, and validation metrics
-    models/feature_store.parquet   one row of model features per applicant (all 5,000),
-                                   cleaned exactly as for training
+    models/feature_store.parquet   one row of model features per applicant: the 5,000 of
+                                   the working sample, plus (Week 6) the 3,000 production
+                                   applicants from data/production/store_extension.parquet,
+                                   if python run.py pool has built it
 
 and writes requirements-api.txt (committed): the service's packages, pinned to the exact
 versions installed here. A model saved with one scikit-learn version must be loaded with
@@ -33,6 +35,7 @@ import pandas as pd
 
 from src.baseline import clean_application
 from src.experiment import feature_table_path, load_week3_config
+from src.production_pool import PRODUCTION_DIR
 from src.tracking import setup_mlflow
 
 MODELS_DIR = Path("models")
@@ -57,14 +60,30 @@ def pinned_requirements() -> str:
 
 # PROVIDED
 def build_feature_store(config: dict[str, Any], features: list[str]) -> pd.DataFrame:
-    """One row per applicant: SK_ID_CURR plus the model's features, cleaned as in training."""
+    """One row per applicant: SK_ID_CURR plus the model's features, cleaned as in training.
+
+    Week 6: the production applicants (python run.py pool) are added after the 5,000.
+    """
     id_col = config["id_col"]
     table = clean_application(pd.read_parquet(feature_table_path(config)))
     missing = [f for f in features if f not in table.columns]
     if missing:
         raise SystemExit(f"the feature table lacks model features {missing[:5]}: rerun "
                          "python run.py features")
-    return table[[id_col, *features]].reset_index(drop=True)
+    store = table[[id_col, *features]]
+    extension = config["root"] / PRODUCTION_DIR / "store_extension.parquet"
+    if extension.exists():
+        extra = pd.read_parquet(extension)
+        absent = [f for f in features if f not in extra.columns]
+        if absent:
+            raise SystemExit(f"{extension} lacks model features {absent[:5]}: rerun "
+                             "python run.py pool")
+        overlap = set(extra[id_col]) & set(store[id_col])
+        if overlap:
+            raise SystemExit(f"{len(overlap)} production applicants are also in the sample: "
+                             "rerun python run.py pool")
+        store = pd.concat([store, extra[[id_col, *features]]], ignore_index=True)
+    return store.reset_index(drop=True)
 
 
 # PROVIDED

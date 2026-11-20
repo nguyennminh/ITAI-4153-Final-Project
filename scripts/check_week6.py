@@ -2,9 +2,8 @@
 
 # DO NOT EDIT: the instructor uses this exact script at checkpoints.
 
-Run it with ``python run.py check --stage mon`` (what the Monday checkpoint needs), or
-``python run.py check`` (everything Monday's part of the submission needs; Wednesday's zip
-replaces this script with the full Week 6 checks). It calls your
+Run it with ``python run.py check --stage mon`` or ``--stage wed`` (what that checkpoint
+needs), or ``python run.py check`` (everything the Week 6 submission needs). It calls your
 LIVE service at the URL in docs/deployment.md (Week 5).
 """
 
@@ -27,7 +26,11 @@ from src.utils import DEFAULT_CONFIG
 MODELS = Path("models")
 PRODUCTION = Path("data/production")
 MONITORING = Path("reports/monitoring")
+EXPLAIN = Path("reports/explain")
+FAIRNESS = Path("reports/fairness")
 MONITORING_REPORT = "docs/monitoring_report.md"
+FAIRNESS_REPORT = "docs/fairness_analysis.md"
+MODEL_CARD = "docs/model_card.md"
 SENT_BATCHES = (1, 2)
 MIN_LOGGED = 950
 
@@ -161,6 +164,56 @@ def check_monitoring_report(config: dict[str, Any]) -> str:
     return _doc(config, MONITORING_REPORT, 400, ("PSI", "KS", "batch 2", "alert"))
 
 
+# DO NOT EDIT
+def check_wed_tests(config: dict[str, Any]) -> str:
+    return _pytest(config, "tests/test_week6_wed.py")
+
+
+# DO NOT EDIT
+def check_explanations(config: dict[str, Any]) -> str:
+    root = config["root"]
+    path = root / EXPLAIN / "explanations.json"
+    if not path.exists() or not (root / EXPLAIN / "shap_global.png").exists():
+        raise CheckFailed(f"{EXPLAIN}/ incomplete; python run.py explain")
+    record = json.loads(path.read_text())
+    applicants = record["applicants"]
+    if len(applicants) < 3 or any(a["decision"] != "reject" for a in applicants):
+        raise CheckFailed("explanations.json needs 3 declined applicants")
+    if any(len(a["reasons"]) < 3 for a in applicants):
+        raise CheckFailed("each explanation needs at least 3 reasons")
+    top = ", ".join(record["global_top"][:3])
+    return f"3 declined applicants explained; top features {top}"
+
+
+# DO NOT EDIT
+def check_fairness(config: dict[str, Any]) -> str:
+    path = config["root"] / FAIRNESS / "fairness.json"
+    if not path.exists():
+        raise CheckFailed(f"{FAIRNESS}/fairness.json not found; python run.py fairness")
+    record = json.loads(path.read_text())
+    for attribute in ("gender", "age_band"):
+        rows = record["groups"].get(attribute, [])
+        if len(rows) < 2:
+            raise CheckFailed(f"no {attribute} groups in fairness.json")
+        needed = {"n", "n_default", "approval_rate", "tpr", "fpr"}
+        if not needed <= set(rows[0]):
+            raise CheckFailed(f"{attribute} rows lack {sorted(needed - set(rows[0]))}")
+    gender = {r["group"]: r["approval_rate"] for r in record["groups"]["gender"]}
+    shown = ", ".join(f"{g} {rate:.0%}" for g, rate in gender.items())
+    return f"approval by gender: {shown}; proxy AUC {record['proxy']['auc']:.2f}"
+
+
+# DO NOT EDIT
+def check_fairness_report(config: dict[str, Any]) -> str:
+    return _doc(config, FAIRNESS_REPORT, 400, ("prox", "interval", "gender", "age"))
+
+
+# DO NOT EDIT
+def check_model_card(config: dict[str, Any]) -> str:
+    return _doc(config, MODEL_CARD, 500, ("intended use", "limitations", "fairness",
+                                          "monitoring"))
+
+
 Check = tuple[str, Callable[[dict[str, Any]], str]]
 MONDAY: list[Check] = [
     ("logging tests", check_mon_tests),
@@ -170,8 +223,14 @@ MONDAY: list[Check] = [
     ("batches sent", check_sent),
     ("monitoring", check_monitoring),
 ]
-SUBMISSION: list[Check] = MONDAY + [("monitoring rep.", check_monitoring_report)]
-STAGES = {"mon": MONDAY, "all": SUBMISSION}
+WEDNESDAY: list[Check] = [
+    ("wed tests", check_wed_tests),
+    ("explanations", check_explanations),
+    ("fairness table", check_fairness),
+]
+SUBMISSION: list[Check] = MONDAY + [("monitoring rep.", check_monitoring_report)] + \
+    WEDNESDAY + [("fairness rep.", check_fairness_report), ("model card", check_model_card)]
+STAGES = {"mon": MONDAY, "wed": WEDNESDAY, "all": SUBMISSION}
 
 
 # DO NOT EDIT
@@ -179,7 +238,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Week 6 checks.")
     parser.add_argument("--config", default=DEFAULT_CONFIG, help="path to config.yaml")
     parser.add_argument("--stage", choices=list(STAGES), default="all",
-                        help="mon: the checkpoint only; all: Monday's part of the submission")
+                        help="mon / wed: that checkpoint only; all: the full submission")
     args = parser.parse_args()
     config = load_week3_config(args.config)
     os.chdir(config["root"])

@@ -27,6 +27,8 @@ Usage (from the repository root):
     python run.py pool         build the simulated production batches -> data/production/
     python run.py send         send a production batch to the service (--batch N --url URL)
     python run.py monitor      drift report from the prediction log -> reports/monitoring/
+    python run.py explain      SHAP: global importance and 3 declined applicants explained
+    python run.py fairness     approval and error rates by gender and age -> reports/fairness.*
     python run.py lint         check code style
     python run.py check        run the Week 6 checks (--stage mon / --stage wed: one checkpoint)
     python run.py check5       run the Week 5 checks
@@ -85,6 +87,8 @@ COMMANDS = {
     "pool": "build the simulated production batches -> data/production/ (--raw-dir PATH)",
     "send": "send a production batch to the service (--batch N --url URL)",
     "monitor": "drift report from the prediction log -> reports/monitoring/ (--logs PATH)",
+    "explain": "SHAP: global importance and 3 declined applicants explained",
+    "fairness": "approval and error rates by gender and age -> reports/fairness.*",
     "lint": "check code style",
     "check": "run the Week 6 checks (--stage mon, --stage wed)",
     "check5": "run the Week 5 checks",
@@ -117,6 +121,8 @@ MODULES = {
     "pool": ["-m", "src.production_pool"],
     "send": ["-m", "scripts.send_batch"],
     "monitor": ["-m", "src.monitoring"],
+    "explain": ["-m", "src.explain"],
+    "fairness": ["-m", "src.fairness"],
     "lint": ["-m", "ruff", "check", "."],
     "check": ["-m", "scripts.check_week6"],
     "check5": ["-m", "scripts.check_week5"],

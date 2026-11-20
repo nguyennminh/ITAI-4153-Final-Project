@@ -75,23 +75,6 @@ def build_record(request: PredictRequest, row: pd.DataFrame,
         - ``row.iloc[0].to_dict()`` is {column: value} for the one row.
         - ``getattr(request, name)`` reads a request field by its name.
     """
-<<<<<<< HEAD
-
-    """The log record for one answered request."""
-    
-    overrides = {
-        name: getattr(request, name)
-        for name in OVERRIDABLE
-        if getattr(request, name) is not None
-    }
-
-    features = {
-        name: json_safe(value)
-        for name, value in row.iloc[0].to_dict().items()
-    }
-
-=======
->>>>>>> d6cea5a5a005316648b21f0f06f03e4f408cc2a4
     return {
         "event": EVENT,
         "severity": "INFO",
@@ -99,10 +82,6 @@ def build_record(request: PredictRequest, row: pd.DataFrame,
         "timestamp": datetime.now(UTC).isoformat(),
         "model_version": response.model_version,
         "SK_ID_CURR": response.SK_ID_CURR,
-<<<<<<< HEAD
-        "overrides": overrides,
-        "features": features,
-=======
         "overrides": {
             name: value
             for name in OVERRIDABLE
@@ -111,16 +90,10 @@ def build_record(request: PredictRequest, row: pd.DataFrame,
         "features": {
             name: json_safe(value) for name, value in row.iloc[0].to_dict().items()
         },
->>>>>>> d6cea5a5a005316648b21f0f06f03e4f408cc2a4
         "probability": response.probability,
         "decision": response.decision,
         "threshold": response.threshold,
     }
-<<<<<<< HEAD
-
-    # raise NotImplementedError("TODO(student): build the prediction log record")
-=======
->>>>>>> d6cea5a5a005316648b21f0f06f03e4f408cc2a4
 
 
 # PROVIDED

@@ -1,13 +1,7 @@
 {
-<<<<<<< HEAD
-  "created": "2026-11-19T23:49:40+00:00",
-  "git_commit": "5c8d933-dirty",
-  "code_fingerprint": "6f27bbba64ef03f3",
-=======
-  "created": "2026-11-19T16:56:21+00:00",
-  "git_commit": "5c8d933-dirty",
+  "created": "2026-11-20T00:04:30+00:00",
+  "git_commit": "e7495c6-dirty",
   "code_fingerprint": "a7ba80804344390e",
->>>>>>> d6cea5a5a005316648b21f0f06f03e4f408cc2a4
   "data_version": "9fb9955ad0ed",
   "model": {
     "model": "hist_gradient_boosting",

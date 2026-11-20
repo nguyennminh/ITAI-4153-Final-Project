@@ -32,6 +32,19 @@ The production threshold is 0.08, chosen to balance the specified costs of 10 fo
 
 The model uses isotonic calibration, which slightly improves the validation Brier score from 0.06903 to 0.06872 while aligning mean predicted default risk (0.0810) closely with the observed default rate (0.081), suggesting a modest improvement in probability calibration; the reliability plot itself was not included among the supplied files, and the decision threshold depends on calibration because it is applied to predicted probabilities whose meaning must correspond reasonably well to actual default risk.
 
-## 5. Limitations and risks
+## 5. Proposed alerts
 
-Key limitations include the validation set's limited number of defaults (81), the risk of overfitting decisions made using the same training split for model selection and threshold selection, the incomplete cost model that excludes factors such as operational expenses and longer-term customer effects, and potential fairness or compliance risks from sensitive or proxy features such as `CODE_GENDER`, age-related variables, and geographic indicators.
+The following alerts use the project's PSI thresholds and add checks for changes in predictions and input-data quality.
+
+| Signal | Threshold | Checked | Triggers |
+|---|---|---|---|
+| Feature drift (PSI) | PSI above 0.10 is moderate; above 0.25 is major | After every 1,000 predictions | Notify the ML team. They investigate the affected features and check for upstream data changes before deciding whether the model needs retraining. |
+| Prediction-score drift | Score PSI above 0.10 | After every 1,000 predictions | Notify the ML team. They compare score distributions with the training reference and investigate changes in predicted risk. |
+| Approval-rate change | Approval rate changes by more than 5 percentage points from the 74.9% validation baseline | Daily | Notify the model owner and lending operations team. They review recent applicant patterns, scores, and decision thresholds. |
+| Missing-value increase | Missingness for any important feature increases by more than 10 percentage points from the training reference | After every 1,000 predictions | Notify the data and ML teams. They check data pipelines and confirm that missing values are being handled correctly before continuing normal monitoring. |
+
+## 6. Limitations
+
+This monitoring identifies changes in input data, prediction scores, and approval rates, but it cannot determine whether individual lending decisions were correct. Actual default outcomes are needed to measure model accuracy and determine whether the model is making reliable decisions. These outcomes may take several months or longer to become available because repayment behavior must be observed over time.
+
+With more time, I would add delayed performance monitoring using actual repayment and default records, regular fairness checks across demographic groups, and automated alerts for unusual changes. I would also expand monitoring to cover more prediction batches and longer periods so that temporary changes can be distinguished from lasting data or model problems.

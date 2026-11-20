@@ -134,7 +134,21 @@ def explain_applicant(contributions: pd.Series, values: pd.Series, typical: pd.S
     Hints:
         - ``contributions[contributions > 0].sort_values(ascending=False).head(n)``
     """
-    raise NotImplementedError("TODO(student): the applicant's top reasons")
+
+    # Keep only features that increased the applicant's risk.
+    positive = contributions[contributions > 0]
+
+    # Sort from the largest positive contribution to the smallest.
+    top_reasons = positive.sort_values(ascending=False).head(n)
+
+    # Build a plain-language explanation for each feature.
+    return [
+        describe(feature, values[feature], typical[feature])
+        + f" (raises the risk score by {contribution:.2f})"
+        for feature, contribution in top_reasons.items()
+    ]
+
+    # raise NotImplementedError("TODO(student): the applicant's top reasons")
 
 
 # PROVIDED

@@ -1,0 +1,76 @@
+{
+  "model_version": "1",
+  "threshold": 0.08,
+  "data": "validation set",
+  "n": 1000,
+  "base_value_log_odds": -2.6487,
+  "global_top": [
+    "EXT_SOURCE_2",
+    "EXT_SOURCE_3",
+    "EXT_SOURCE_1",
+    "DAYS_EMPLOYED",
+    "PREV_REFUSED_RATE",
+    "OWN_CAR_AGE",
+    "CREDIT_GOODS_RATIO",
+    "INST_LATE_SHARE",
+    "POS_COMPLETED_SHARE",
+    "NAME_EDUCATION_TYPE",
+    "BUREAU_DAYS_CREDIT_MAX",
+    "INST_DAYS_LATE_MAX",
+    "INST_PAYMENT_DIFF_MEAN",
+    "DAYS_BIRTH",
+    "CODE_GENDER",
+    "BUREAU_AMT_DEBT_MEAN",
+    "CC_DRAWINGS_MEAN",
+    "LIVINGAREA_AVG",
+    "AMT_GOODS_PRICE",
+    "REG_CITY_NOT_LIVE_CITY"
+  ],
+  "applicants": [
+    {
+      "SK_ID_CURR": 386641,
+      "kind": "riskiest",
+      "probability": 1.0,
+      "decision": "reject",
+      "reasons": [
+        "external credit score 2 is 0.0229 (typical: 0.564) (raises the risk score by 0.96)",
+        "external credit score 3 is 0.229 (typical: 0.532) (raises the risk score by 0.45)",
+        "time since the latest credit elsewhere is 38 days (typical: 288 days) (raises the risk score by 0.21)"
+      ],
+      "lowered_risk": [
+        "education is Higher education (typical: Secondary / secondary special)",
+        "gender is F (typical: F)"
+      ]
+    },
+    {
+      "SK_ID_CURR": 382209,
+      "kind": "typical decline",
+      "probability": 0.1449,
+      "decision": "reject",
+      "reasons": [
+        "external credit score 2 is 0.244 (typical: 0.564) (raises the risk score by 0.59)",
+        "external credit score 3 is missing (typical: 0.532) (raises the risk score by 0.24)",
+        "time in the current job is 2.8 years (typical: 4.4 years) (raises the risk score by 0.15)"
+      ],
+      "lowered_risk": [
+        "education is Incomplete higher (typical: Secondary / secondary special)",
+        "share of earlier applications refused is 0 (typical: 0)"
+      ]
+    },
+    {
+      "SK_ID_CURR": 451978,
+      "kind": "borderline",
+      "probability": 0.1282,
+      "decision": "reject",
+      "reasons": [
+        "external credit score 2 is 0.334 (typical: 0.564) (raises the risk score by 0.40)",
+        "time in the current job is 1.6 years (typical: 4.4 years) (raises the risk score by 0.20)",
+        "external credit score 1 is missing (typical: 0.5) (raises the risk score by 0.09)"
+      ],
+      "lowered_risk": [
+        "external credit score 3 is 0.672 (typical: 0.532)",
+        "education is Higher education (typical: Secondary / secondary special)"
+      ]
+    }
+  ]
+}

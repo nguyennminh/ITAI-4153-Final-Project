@@ -28,10 +28,10 @@ it, so the bucket needs the new file.
 ### A2. Settings for this terminal (as in Week 5, with a new image tag)
 
 ```bash
-gcloud config set project <your-project-id>
+gcloud config set project credit-risk-group4-513720
 PROJECT=$(gcloud config get-value project)
 REGION=us-central1
-BUCKET=<your bucket's name>
+BUCKET=credit-risk-models-group4
 IMAGE=$REGION-docker.pkg.dev/$PROJECT/credit-risk/api:v2
 SA=credit-risk-api@$PROJECT.iam.gserviceaccount.com
 ```
@@ -41,8 +41,8 @@ SA=credit-risk-api@$PROJECT.iam.gserviceaccount.com
 ### A3. Get the merged code, build, push, deploy (5-8 minutes)
 
 ```bash
-cd ~ && rm -rf <repo> && git clone https://github.com/<your-account>/<repo>.git
-cd <repo>
+cd ~ && rm -rf ITAI-4153-Final-Project && git clone https://github.com/nguyennminh/ITAI-4153-Final-Project.git
+cd ITAI-4153-Final-Project
 grep -c log_prediction api/main.py
 ```
 
@@ -65,7 +65,7 @@ Same command as Week 5, with the new image. The URL does not change.
 ```bash
 URL=$(gcloud run services describe credit-risk-api --region=$REGION --format='value(status.url)')
 curl -s $URL/health
-curl -s -X POST $URL/predict -H "Content-Type: application/json" -d '{"SK_ID_CURR": <first id in data/production/batch3.jsonl>}'
+curl -s -X POST $URL/predict -H "Content-Type: application/json" -d '{"SK_ID_CURR": 100822}'
 ```
 
 A decision (not a 404) means the new feature store is live. Batch 3 is for Week 7, so one

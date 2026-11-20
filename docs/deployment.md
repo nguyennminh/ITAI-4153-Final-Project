@@ -34,5 +34,5 @@ Team: Group 4 (Krish Iyer, Minh Nguyen, Calvin Zheng)
    --region=us-central1 --update-env-vars=BUNDLE_UPDATED=<date>` starts a new revision.
 6. If the code, the packages, or the Dockerfile changed, rebuild and redeploy instead:
    `docs/deploy_cloud_run.md` steps 0, 5, 6, 7 and 8 (use a new image tag, for example `v2`).
-7. Check the live service: `curl <service URL>/model-info` shows the new version, then
+7. Check the live service: `curl https://credit-risk-api-196591733163.us-central1.run.app/model-info` shows the new version, then
    `python run.py check`.

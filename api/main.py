@@ -12,7 +12,6 @@ request: loading takes about a second, a prediction a few milliseconds.
 """
 
 from __future__ import annotations
-from api.prediction_log import log_prediction
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager

@@ -95,19 +95,11 @@ def psi(reference: pd.Series | np.ndarray, current: pd.Series | np.ndarray, bins
 
     Every term is >= 0, so PSI is never negative, and it is 0 when the shares are equal.
     """
-
     if edges is None:
         edges = quantile_edges(reference, bins)
-
-    e = bin_shares(reference, edges)
-    a = bin_shares(current, edges)
-
-    e = np.clip(e, EPS, None)
-    a = np.clip(a, EPS, None)
-
-    return float(np.sum((a - e) * np.log(a / e)))
-
-    # raise NotImplementedError("TODO(student): the population stability index")
+    expected = np.clip(bin_shares(reference, edges), EPS, None)
+    actual = np.clip(bin_shares(current, edges), EPS, None)
+    return float(np.sum((actual - expected) * np.log(actual / expected)))
 
 
 # PROVIDED

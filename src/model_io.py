@@ -6,14 +6,21 @@ The model tests in tests/model/ test the model you registered in Week 3
 (``models:/credit-risk@staging``), through ``predict_proba`` only. They never look inside
 the model, so they keep working whatever model you register later (boosting, a tree,
 LightGBM, ...). That is what makes them useful in CI.
+
+Week 7: set the environment variable ``MODEL_UNDER_TEST`` to a model record (for example
+reports/retrain/challenger.json) and the same tests run on that model instead.
+``python run.py champion`` does this to gate the challenger.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+import joblib
 import mlflow.sklearn
 import numpy as np
 import pandas as pd
@@ -58,7 +65,21 @@ def load_production_model(config: dict[str, Any]) -> ProductionModel:
     """
     if not feature_table_path(config).exists():
         raise FileNotFoundError("data/features/features.parquet not found")
+    override = os.environ.get("MODEL_UNDER_TEST")
+    if override:  # Week 7: test another model (the challenger) with the same tests
+        record = json.loads(Path(override).read_text())
+        if record.get("model_path"):
+            model = joblib.load(record["model_path"])
+        else:
+            setup_mlflow(config)
+            model = mlflow.sklearn.load_model(record["registered"]["uri"])
+        data = load_training_data(config, record["features"])
+        return ProductionModel(model, data, float(record["threshold"]),
+                               f"model under test ({override})")
     final_path = config["week3"]["outputs"]["final_model"]
+    champion = config["root"] / "reports" / "champion.json"  # Week 7: after promote/rollback
+    if champion.exists():
+        final_path = champion
     if final_path.exists():
         record = json.loads(final_path.read_text())
         setup_mlflow(config)

@@ -29,8 +29,14 @@ Usage (from the repository root):
     python run.py monitor      drift report from the prediction log -> reports/monitoring/
     python run.py explain      SHAP: global importance and 3 declined applicants explained
     python run.py fairness     approval and error rates by gender and age -> reports/fairness.*
+    python run.py outcomes     the live model's real performance on the labeled batches
+    python run.py retrain      train and register the challenger (alias challenger)
+    python run.py champion     compare champion and challenger, run the gate, decide
+    python run.py promote      make the challenger the champion (then export runs)
+    python run.py rollback     make an earlier version the champion again (--version N)
     python run.py lint         check code style
-    python run.py check        run the Week 6 checks (--stage mon / --stage wed: one checkpoint)
+    python run.py check        run the Week 7 checks (--stage mon / --stage wed: one checkpoint)
+    python run.py check6       run the Week 6 checks
     python run.py check5       run the Week 5 checks
     python run.py check4       run the Week 4 checks
     python run.py check3       run the Week 3 checks
@@ -89,8 +95,14 @@ COMMANDS = {
     "monitor": "drift report from the prediction log -> reports/monitoring/ (--logs PATH)",
     "explain": "SHAP: global importance and 3 declined applicants explained",
     "fairness": "approval and error rates by gender and age -> reports/fairness.*",
+    "outcomes": "the live model's real performance on the labeled batches (--logs PATH)",
+    "retrain": "train and register the challenger (alias challenger)",
+    "champion": "compare champion and challenger, run the gate, decide",
+    "promote": "make the challenger the champion (--override REASON)",
+    "rollback": "make an earlier version the champion again (--version N)",
     "lint": "check code style",
-    "check": "run the Week 6 checks (--stage mon, --stage wed)",
+    "check": "run the Week 7 checks (--stage mon, --stage wed)",
+    "check6": "run the Week 6 checks",
     "check5": "run the Week 5 checks",
     "check4": "run the Week 4 checks",
     "check3": "run the Week 3 checks",
@@ -123,8 +135,14 @@ MODULES = {
     "monitor": ["-m", "src.monitoring"],
     "explain": ["-m", "src.explain"],
     "fairness": ["-m", "src.fairness"],
+    "outcomes": ["-m", "src.outcomes"],
+    "retrain": ["-m", "src.retrain"],
+    "champion": ["-m", "src.champion"],
+    "promote": ["-m", "src.promote", "promote"],
+    "rollback": ["-m", "src.promote", "rollback"],
     "lint": ["-m", "ruff", "check", "."],
-    "check": ["-m", "scripts.check_week6"],
+    "check": ["-m", "scripts.check_week7"],
+    "check6": ["-m", "scripts.check_week6"],
     "check5": ["-m", "scripts.check_week5"],
     "check4": ["-m", "scripts.check_week4"],
     "check3": ["-m", "scripts.check_week3"],

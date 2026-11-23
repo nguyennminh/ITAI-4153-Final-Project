@@ -1,0 +1,21 @@
+# PROVIDED: Week 7 retraining settings (src/retrain.py and src/champion.py read them).
+# Read together with config.yaml, features.yaml, models.yaml and final.yaml.
+
+# The production batches whose true outcomes have been released. Their applicants are
+# added to the training data (except the recent holdout below).
+labeled_batches: [1, 2]
+
+# A fixed share of the labeled production applicants is never trained on: the "recent"
+# slice both models are compared on. Chosen by applicant id with a fixed seed, so every
+# rerun (and Cloud Build on Wednesday) uses exactly the same applicants.
+recent_holdout_share: 0.3
+holdout_seed: 2027
+
+registry:
+  challenger_alias: challenger   # the new model, registered but not serving
+                                 # (the champion keeps the alias from final.yaml: staging)
+
+# Your decision rule (src/champion.py -> decide). The gate in config/gate.yaml runs first.
+decision:
+  max_cost_increase: 0.0   # promote only if the challenger's expected cost per applicant on
+                           # the recent slice is at most the champion's + this

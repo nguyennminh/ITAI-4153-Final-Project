@@ -5,7 +5,8 @@
 Run it with ``python run.py export``. Cloud Run cannot reach the MLflow database on your
 laptop, so this copies everything the service needs into models/ (never committed):
 
-    models/model.joblib            models:/credit-risk@staging, the registered Week 3 model
+    models/model.joblib            models:/credit-risk@staging: the champion (Week 3's model,
+                                   or the one you promoted in Week 7)
     models/model_info.json         its version, threshold, features, and validation metrics
     models/feature_store.parquet   one row of model features per applicant: the 5,000 of
                                    the working sample, plus (Week 6) the 3,000 production
@@ -36,6 +37,7 @@ import pandas as pd
 from src.baseline import clean_application
 from src.experiment import feature_table_path, load_week3_config
 from src.production_pool import PRODUCTION_DIR
+from src.retrain import champion_record
 from src.tracking import setup_mlflow
 
 MODELS_DIR = Path("models")
@@ -90,11 +92,7 @@ def build_feature_store(config: dict[str, Any], features: list[str]) -> pd.DataF
 def export(config: dict[str, Any]) -> dict[str, Any]:
     """Write the bundle into models/ and requirements-api.txt; return model_info."""
     root = config["root"]
-    final_path = config["week3"]["outputs"]["final_model"]
-    if not final_path.exists():
-        raise SystemExit("reports/final_model.json not found: register a model first "
-                         "(python run.py final, Week 3)")
-    record = json.loads(final_path.read_text())
+    record = champion_record(config)  # Week 7: reports/champion.json, else final_model.json
     setup_mlflow(config)
     model = mlflow.sklearn.load_model(record["registered"]["uri"])
     store = build_feature_store(config, record["features"])
@@ -139,7 +137,7 @@ def main() -> None:
     for name, size in sizes.items():
         print(f"  models/{name:<24}{size}")
     print(f"Wrote requirements-api.txt (Python {info['python']})")
-    print("Next: upload the three models/ files to your private bucket (WEEK5.md).")
+    print("Next: upload the three models/ files to your bucket (docs/cloud_shell_week7.md).")
 
 
 if __name__ == "__main__":

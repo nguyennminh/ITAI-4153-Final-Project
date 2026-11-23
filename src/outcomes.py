@@ -41,7 +41,6 @@ PERFORMANCE_KEYS = ("n", "n_default", "default_rate", "mean_score", "auc", "cost
                     "approval_rate", "bad_rate_approved")
 
 
-# TODO(student)
 def performance(y_true: ArrayLike, scores: ArrayLike, threshold: float,
                 costs: dict[str, float]) -> dict[str, float]:
     """How a model really did on a set of applicants whose outcomes are known.
@@ -69,7 +68,20 @@ def performance(y_true: ArrayLike, scores: ArrayLike, threshold: float,
         - Convert with ``np.asarray`` first; ``approved = scores < threshold``.
         - ``y[approved].mean()`` is the bad rate among the approved.
     """
-    raise NotImplementedError("TODO(student): the real performance on known outcomes")
+    y = np.asarray(y_true)
+    scores = np.asarray(scores)
+    approved = scores < threshold
+
+    return {
+        "n": int(y.size),
+        "n_default": int(np.count_nonzero(y == 1)),
+        "default_rate": float(y.mean()),
+        "mean_score": float(scores.mean()),
+        "auc": float(roc_auc_score(y, scores)),
+        "cost": float(expected_cost(y, scores, threshold, costs)),
+        "approval_rate": float(approved.mean()),
+        "bad_rate_approved": float(y[approved].mean()) if approved.any() else float("nan"),
+    }
 
 
 # PROVIDED

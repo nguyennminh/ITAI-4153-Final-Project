@@ -1,0 +1,55 @@
+{
+  "model_version": "1",
+  "threshold": 0.08,
+  "validation": {
+    "n": 1000,
+    "n_default": 81,
+    "default_rate": 0.081,
+    "mean_score": 0.08096440549681921,
+    "auc": 0.7471218044304732,
+    "cost": 0.533,
+    "approval_rate": 0.749,
+    "bad_rate_approved": 0.044058744993324434
+  },
+  "batches": {
+    "1": {
+      "real": {
+        "n": 1000,
+        "n_default": 100,
+        "default_rate": 0.1,
+        "mean_score": 0.08756438712482549,
+        "auc": 0.7456444444444444,
+        "cost": 0.662,
+        "approval_rate": 0.744,
+        "bad_rate_approved": 0.06182795698924731
+      },
+      "monitoring_said": {
+        "approval_rate": 0.744,
+        "mean_score": 0.0876,
+        "score_psi": 0.0132,
+        "features_major": 0
+      },
+      "cost_change_vs_validation": 0.129
+    },
+    "2": {
+      "real": {
+        "n": 1000,
+        "n_default": 160,
+        "default_rate": 0.16,
+        "mean_score": 0.08989962825314075,
+        "auc": 0.7106398809523808,
+        "cost": 0.898,
+        "approval_rate": 0.701,
+        "bad_rate_approved": 0.09843081312410841
+      },
+      "monitoring_said": {
+        "approval_rate": 0.701,
+        "mean_score": 0.0899,
+        "score_psi": 0.014,
+        "features_major": 4
+      },
+      "cost_change_vs_validation": 0.365
+    }
+  },
+  "source": "cloud_logging"
+}

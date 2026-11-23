@@ -51,7 +51,6 @@ GATE_CONFIG = Path("config/gate.yaml")
 SLICES = ("validation", "recent")
 
 
-# TODO(student)
 def decide(comparison: dict[str, Any], failures: list[str],
            rule: dict[str, Any]) -> dict[str, Any]:
     """Promote the challenger, or keep the champion. Always say why.
@@ -75,7 +74,23 @@ def decide(comparison: dict[str, Any], failures: list[str],
     The recent slice decides because it looks like the applicants the model will see next;
     the validation slice is already guarded by the gate.
     """
-    raise NotImplementedError("TODO(student): promote or keep, with the reasons")
+    if failures:
+        return {"decision": "keep", "reasons": [f"gate: {failure}" for failure in failures]}
+
+    recent = comparison["recent"]
+    champion_cost = recent["champion"]["cost"]
+    challenger_cost = recent["challenger"]["cost"]
+    if challenger_cost > champion_cost + rule["max_cost_increase"]:
+        return {
+            "decision": "keep",
+            "reasons": [f"Recent challenger cost {challenger_cost:.3f} exceeds champion "
+                        f"cost {champion_cost:.3f} plus the allowed increase."],
+        }
+    return {
+        "decision": "promote",
+        "reasons": [f"Recent challenger cost {challenger_cost:.3f} is within the allowed "
+                    f"increase over champion cost {champion_cost:.3f}."],
+    }
 
 
 # PROVIDED

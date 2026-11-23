@@ -22,10 +22,10 @@ https://console.cloud.google.com). Copy each block, check what it prints, then g
 ## 0. Settings (every time Cloud Shell opens or reconnects)
 
 ```bash
-gcloud config set project <your-project-id>
+gcloud config set project credit-risk-group4-513720
 PROJECT=$(gcloud config get-value project)
 REGION=us-central1
-BUCKET=<your bucket's name>
+BUCKET=credit-risk-models-group4
 URL=$(gcloud run services describe credit-risk-api --region=$REGION --format='value(status.url)')
 echo $BUCKET $URL
 ```
